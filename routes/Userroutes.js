@@ -1,4 +1,7 @@
-import { Registercontroller, Logincontroller } from "./UserController.js";
+import {
+  Registercontroller,
+  Logincontroller,
+} from "./../controller/UserController";
 import express from "express";
 
 const router = express.Router();

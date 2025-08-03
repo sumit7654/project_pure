@@ -14,8 +14,8 @@ dotenv.config();
 connectDB();
 
 const instance = new Razorpay({
-  key_id: "rzp_test_v8P8IcmnHeuqaa", // अपनी Test Key ID यहाँ डालें
-  key_secret: "zlExsejz4bfS5vvn1K559agj", // अपना Test Key Secret यहाँ डालें
+  key_id: process.env.KEY_ID, // अपनी Test Key ID यहाँ डालें
+  key_secret: process.env.KEY_SECRET, // अपना Test Key Secret यहाँ डालें
 });
 
 const app = express();

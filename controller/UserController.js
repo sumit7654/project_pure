@@ -1,6 +1,6 @@
 import React from "react";
 
-import Usermodel from "../model/Usermodel.js";
+import Usermodel from "./../model/Usermodel";
 
 export const Registercontroller = async (req, res) => {
   const { name, phone_no, password, confirmpassword } = req.body;

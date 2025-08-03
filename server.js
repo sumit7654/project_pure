@@ -1,6 +1,6 @@
 // import React from "react";
 import express, { json } from "express";
-import connectDB from "../server/config/connectDB.js";
+import connectDB from "./connectDB.js";
 import color from "colors";
 import cors from "cors";
 import dotenv from "dotenv";

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import walletmodel from "./../model/Walletmodel.js";
+import WalletModel from "./../model/Walletmodel.js";
 import TransactionModel from "./../model/TransactionModel.js";
 
 export const addMoneyController = async (req, res) => {
@@ -21,10 +21,10 @@ export const addMoneyController = async (req, res) => {
         .send({ message: "Amount must be a positive number" });
     }
 
-    let wallet = await walletmodel.findOne({ phone_no }).session(session);
+    let wallet = await WalletModel.findOne({ phone_no }).session(session);
 
     if (!wallet) {
-      wallet = new walletmodel({ phone_no, balance: 0 });
+      wallet = new WalletModel({ phone_no, balance: 0 });
     }
     // update balance in wallet
     wallet.balance += numericAmount;

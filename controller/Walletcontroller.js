@@ -1,8 +1,8 @@
 // backend/controllers/WalletController.js
 // --- SIMPLIFIED CODE FOR DEBUGGING ---
 
-import WalletModel from "../model/WalletModel.js";
-import TransactionModel from "../model/TransactionModel.js";
+import WalletModel from "./../model/WalletModel.js";
+import TransactionModel from "./../model/TransactionModel.js";
 // mongoose को इम्पोर्ट करने की अब जरूरत नहीं है अगर सिर्फ मॉडल इस्तेमाल हो रहे हैं
 // import mongoose from "mongoose";
 
@@ -12,11 +12,9 @@ export const addMoneyController = async (req, res) => {
     const { phone_no, amount, razorpayPaymentId } = req.body;
 
     if (!phone_no || !amount || !razorpayPaymentId) {
-      return res
-        .status(400)
-        .send({
-          message: "Phone number, amount, and payment ID are required.",
-        });
+      return res.status(400).send({
+        message: "Phone number, amount, and payment ID are required.",
+      });
     }
 
     const numericAmount = Number(amount);
@@ -53,12 +51,10 @@ export const addMoneyController = async (req, res) => {
   } catch (error) {
     // यहाँ पर आपका एरर आएगा
     console.error("Error in addMoneyController (Simplified):", error);
-    return res
-      .status(500)
-      .send({
-        success: false,
-        message: "Internal Server Error during wallet update",
-      });
+    return res.status(500).send({
+      success: false,
+      message: "Internal Server Error during wallet update",
+    });
   }
 };
 

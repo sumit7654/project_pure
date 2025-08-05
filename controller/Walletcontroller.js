@@ -2,7 +2,7 @@
 // --- SIMPLIFIED CODE FOR DEBUGGING ---
 
 import WalletModel from "./../model/WalletModel.js";
-import TransactionModel from "./../model/TransactionModel.js";
+import transactionSchema from "./../model/TransactionModel.js";
 // mongoose को इम्पोर्ट करने की अब जरूरत नहीं है अगर सिर्फ मॉडल इस्तेमाल हो रहे हैं
 // import mongoose from "mongoose";
 
@@ -35,7 +35,7 @@ export const addMoneyController = async (req, res) => {
     await wallet.save(); // .save() से session हटा दिया
 
     // ट्रांजैक्शन का रिकॉर्ड बनाएं
-    await TransactionModel.create({
+    await transactionSchema.create({
       walletId: wallet._id,
       amount: numericAmount,
       type: "credit",

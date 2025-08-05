@@ -1,51 +1,49 @@
-import mongoose from "mongoose";
-import WalletModel from "./../model/Walletmodel.js";
-import TransactionModel from "./../model/TransactionModel.js";
+// backend/controllers/WalletController.js
+// --- SIMPLIFIED CODE FOR DEBUGGING ---
 
+import WalletModel from "../model/WalletModel.js";
+import TransactionModel from "../model/TransactionModel.js";
+// mongoose को इम्पोर्ट करने की अब जरूरत नहीं है अगर सिर्फ मॉडल इस्तेमाल हो रहे हैं
+// import mongoose from "mongoose";
+
+// --- पैसे जोड़ने के लिए कंट्रोलर (बिना ट्रांजैक्शन के) ---
 export const addMoneyController = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction(); //for secure transaction
   try {
     const { phone_no, amount, razorpayPaymentId } = req.body;
 
     if (!phone_no || !amount || !razorpayPaymentId) {
-      return res.status(400).send({
-        message: "Phone number , amount , and payment Id are required",
-      });
+      return res
+        .status(400)
+        .send({
+          message: "Phone number, amount, and payment ID are required.",
+        });
     }
 
     const numericAmount = Number(amount);
     if (numericAmount <= 0) {
       return res
         .status(400)
-        .send({ message: "Amount must be a positive number" });
+        .send({ message: "Amount must be a positive number." });
     }
 
-    let wallet = await WalletModel.findOne({ phone_no }).session(session);
-
+    // यूजर का वॉलेट ढूंढें या नया बनाएं
+    let wallet = await WalletModel.findOne({ phone_no });
     if (!wallet) {
       wallet = new WalletModel({ phone_no, balance: 0 });
     }
-    // update balance in wallet
+
+    // बैलेंस अपडेट करें
     wallet.balance += numericAmount;
-    await wallet.save({ session });
+    await wallet.save(); // .save() से session हटा दिया
 
-    // record of transaction
-    await TransactionModel.create(
-      [
-        {
-          walletId: wallet._id,
-          amount: numericAmount,
-          type: "credit",
-          status: "successful",
-          razorpayPaymentId: razorpayPaymentId,
-        },
-      ],
-      { session }
-    );
-
-    await session.commitTransaction(); //ACID property for final commit
-    session.endSession();
+    // ट्रांजैक्शन का रिकॉर्ड बनाएं
+    await TransactionModel.create({
+      walletId: wallet._id,
+      amount: numericAmount,
+      type: "credit",
+      status: "successful",
+      razorpayPaymentId: razorpayPaymentId,
+    });
 
     return res.status(200).send({
       success: true,
@@ -53,36 +51,29 @@ export const addMoneyController = async (req, res) => {
       newBalance: wallet.balance,
     });
   } catch (error) {
-    await session.abortTransaction(); // गलती होने पर सब कुछ वापस करें
-    session.endSession();
-    console.error("Error in addMoneyController:", error);
+    // यहाँ पर आपका एरर आएगा
+    console.error("Error in addMoneyController (Simplified):", error);
     return res
       .status(500)
-      .send({ success: false, message: "Internal Server Error" });
+      .send({
+        success: false,
+        message: "Internal Server Error during wallet update",
+      });
   }
 };
 
-// to get balance from wallet
-
+// --- getBalanceController को वैसे ही रहने दें ---
 export const getBalanceController = async (req, res) => {
   try {
     const { phone_no } = req.params;
-
     if (!phone_no) {
       return res.status(400).send({ message: "Phone number is required." });
     }
     const wallet = await WalletModel.findOne({ phone_no });
     if (!wallet) {
-      // if user don't have wallet then show balance 0
-      return res.status(200).send({
-        success: true,
-        balance: 0,
-      });
+      return res.status(200).send({ success: true, balance: 0 });
     }
-    return res.status(200).send({
-      success: true,
-      balance: wallet.balance,
-    });
+    return res.status(200).send({ success: true, balance: wallet.balance });
   } catch (error) {
     console.error("Error in getBalanceController:", error);
     return res

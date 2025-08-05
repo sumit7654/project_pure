@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import walletmodel from "../model/walletmodel.js";
-import TransactionModel from "../model/TransactionModel.js";
+import walletmodel from "./../model/Walletmodel.js";
+import TransactionModel from "./../model/TransactionModel.js";
 
 export const addMoneyController = async (req, res) => {
   const session = await mongoose.startSession();

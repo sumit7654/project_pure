@@ -2,7 +2,7 @@ import express from "express";
 import {
   addMoneyController,
   getBalanceController,
-} from "../controller/Walletcontroller.js";
+} from "./../controller/Walletcontroller.js";
 
 const router = express.Router();
 

@@ -1,12 +1,12 @@
 // backend/controllers/WalletController.js
-// --- SIMPLIFIED CODE FOR DEBUGGING ---
+// --- FINAL CORRECTED CODE ---
 
-import WalletModel from "./../model/WalletModel.js";
-import transactionSchema from "./../model/TransactionModel.js";
-// mongoose को इम्पोर्ट करने की अब जरूरत नहीं है अगर सिर्फ मॉडल इस्तेमाल हो रहे हैं
-// import mongoose from "mongoose";
+// 1. पाथ ठीक किया गया ("models")
+// 2. TransactionModel का नाम सही किया गया
+import WalletModel from "../model/WalletModel.js";
+import TransactionModel from "../model/TransactionModel.js";
 
-// --- पैसे जोड़ने के लिए कंट्रोलर (बिना ट्रांजैक्शन के) ---
+// --- पैसे जोड़ने के लिए कंट्रोलर ---
 export const addMoneyController = async (req, res) => {
   try {
     const { phone_no, amount, razorpayPaymentId } = req.body;
@@ -24,18 +24,16 @@ export const addMoneyController = async (req, res) => {
         .send({ message: "Amount must be a positive number." });
     }
 
-    // यूजर का वॉलेट ढूंढें या नया बनाएं
     let wallet = await WalletModel.findOne({ phone_no });
     if (!wallet) {
       wallet = new WalletModel({ phone_no, balance: 0 });
     }
 
-    // बैलेंस अपडेट करें
     wallet.balance += numericAmount;
-    await wallet.save(); // .save() से session हटा दिया
+    await wallet.save();
 
-    // ट्रांजैक्शन का रिकॉर्ड बनाएं
-    await transactionSchema.create({
+    // 3. सही मॉडल (TransactionModel) का उपयोग किया गया
+    await TransactionModel.create({
       walletId: wallet._id,
       amount: numericAmount,
       type: "credit",
@@ -49,8 +47,7 @@ export const addMoneyController = async (req, res) => {
       newBalance: wallet.balance,
     });
   } catch (error) {
-    // यहाँ पर आपका एरर आएगा
-    console.error("Error in addMoneyController (Simplified):", error);
+    console.error("Error in addMoneyController:", error);
     return res.status(500).send({
       success: false,
       message: "Internal Server Error during wallet update",

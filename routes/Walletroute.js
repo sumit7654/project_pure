@@ -1,0 +1,12 @@
+import express from "express";
+import {
+  addMoneyController,
+  getBalanceController,
+} from "../controller/Walletcontroller.js";
+
+const router = express.Router();
+
+router.post("/add-money", addMoneyController);
+router.post("/balance/:phone_no", getBalanceController);
+
+export default router;

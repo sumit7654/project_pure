@@ -5,9 +5,10 @@ import color from "colors";
 import cors from "cors";
 import dotenv from "dotenv";
 import Userroutes from "./routes/Userroutes.js";
+import Walletroute from "./routes/Walletroute.js";
 import Razorpay from "razorpay";
 // import Addproductroutes from "./routes/Addproductroutes.js";
-import cloudinary from "cloudinary";
+// import cloudinary from "cloudinary";
 // import upload from "./middleware/uploadmiddleware.js";
 dotenv.config();
 
@@ -20,7 +21,7 @@ const instance = new Razorpay({
 
 const app = express();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3541;
 // cloudinary.config({
 //   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
 //   api_key: process.env.CLOUDINARY_API_KEY,
@@ -52,11 +53,9 @@ app.post("/create-order", async (req, res) => {
       return res.status(500).json({ error: "Order creation failed" });
     }
 
-    // ऐप को ऑर्डर की डिटेल्स JSON में भेजें
     console.log("Order Created Successfully: ".bgGreen, order);
     res.json(order);
   } catch (error) {
-    // अगर कोई गड़बड़ी हो तो उसे लॉग करें और एरर भेजें
     console.error("Error in /create-order: ".bgRed, error);
     res.status(500).json({ error: "Internal Server Error" });
   }
@@ -65,6 +64,7 @@ app.post("/create-order", async (req, res) => {
 // Test route to check if server is working
 
 app.use("/api/auth", Userroutes);
+app.use("/api/v1/wallet", Walletroute);
 // app.use("/api/products", Addproductroutes);
 
 app.listen(PORT, () => {

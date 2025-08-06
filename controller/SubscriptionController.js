@@ -53,37 +53,28 @@ export const createSubscriptionController = async (req, res) => {
   }
 };
 
-// ✅ FIX #2: This function now correctly finds the latest active subscription
-export const getSubscriptionController = async (req, res) => {
+export const getActiveSubscriptionsController = async (req, res) => {
   try {
     const { phone_no } = req.params;
 
-    // Find all active subs, sort by newest first, and get the first one
+    // Use .find() to get all matching documents
     const subscriptions = await SubscriptionModel.find({
       phone_no,
       is_active: true,
-    })
-      .sort({ createdAt: -1 }) // Sort by creation date, newest first
-      .limit(1); // Get only the most recent one
+    }).sort({ createdAt: -1 }); // Sort by newest first
 
-    if (!subscriptions || subscriptions.length === 0) {
-      return res
-        .status(404)
-        .send({ success: false, message: "No active subscription found." });
-    }
-
-    // Send the first (and only) subscription in the array
-    res.status(200).send({ success: true, subscription: subscriptions[0] });
+    // It's not an error if the array is empty, just send an empty array
+    res.status(200).send({ success: true, subscriptions });
   } catch (error) {
-    console.error("Error fetching subscription:", error);
+    console.error("Error fetching subscriptions:", error);
     res.status(500).send({ success: false, message: "Internal Server Error" });
   }
 };
 
-// updatePausedDatesController (This one is likely correct, but let's make it robust)
+// ✅ NEW: This function now updates a SPECIFIC subscription by its ID
 export const updatePausedDatesController = async (req, res) => {
   try {
-    const { phone_no } = req.params;
+    const { subId } = req.params; // We now use the unique subscription ID
     const { paused_dates } = req.body;
 
     if (!Array.isArray(paused_dates)) {
@@ -92,27 +83,25 @@ export const updatePausedDatesController = async (req, res) => {
         .send({ message: "paused_dates must be an array." });
     }
 
-    // Find the LATEST active subscription and update it
-    const latestSub = await SubscriptionModel.findOne({
-      phone_no,
-      is_active: true,
-    }).sort({ createdAt: -1 });
+    const updatedSubscription = await SubscriptionModel.findByIdAndUpdate(
+      subId,
+      { paused_dates: paused_dates },
+      { new: true } // Return the updated document
+    );
 
-    if (!latestSub) {
-      return res.status(404).send({
-        success: false,
-        message: "No active subscription found to update.",
-      });
+    if (!updatedSubscription) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Subscription not found to update." });
     }
 
-    latestSub.paused_dates = paused_dates;
-    await latestSub.save();
-
-    res.status(200).send({
-      success: true,
-      message: "Subscription updated successfully!",
-      subscription: latestSub,
-    });
+    res
+      .status(200)
+      .send({
+        success: true,
+        message: "Subscription updated successfully!",
+        subscription: updatedSubscription,
+      });
   } catch (error) {
     console.error("Error updating paused dates:", error);
     res.status(500).send({ success: false, message: "Internal Server Error" });

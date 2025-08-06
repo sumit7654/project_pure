@@ -1,34 +1,42 @@
-import SubscriptionModel from "../model/SubscriptionModel.js";
+// backend/controllers/SubscriptionController.js
 
-// यह एक उदाहरण प्लान लिस्ट है, आप इसे अपने डेटाबेस में भी रख सकते हैं
-const availablePlans = {
-  "milk-1l": { name: "1 Litre Milk", price_per_day: 60 },
-  "dahi-500g": { name: "500g Dahi", price_per_day: 35 },
-};
+import SubscriptionModel from "../models/SubscriptionModel.js";
 
 export const createSubscriptionController = async (req, res) => {
   try {
-    const { phone_no, plan_id, validity_in_days, skip_days } = req.body;
+    console.log(
+      "--- Received request to create subscription with body: ---",
+      req.body
+    );
+    // 1. We now get the complete plan object from the request body
+    const { phone_no, planDetails, validity_in_days, skip_days } = req.body;
+    console.log(req.body);
 
-    if (!phone_no || !plan_id || !validity_in_days) {
+    // Basic validation
+    if (!phone_no || !planDetails || !validity_in_days) {
       return res.status(400).send({ message: "Required fields are missing" });
     }
 
-    const planDetails = availablePlans[plan_id];
-    if (!planDetails) {
-      return res.status(404).send({ message: "Plan not found" });
+    if (!planDetails.name || !planDetails.price_per_day) {
+      return res
+        .status(400)
+        .send({ message: "Plan details (name, price) are required." });
     }
 
     const today = new Date();
     const endDate = new Date();
     endDate.setDate(today.getDate() + parseInt(validity_in_days, 10));
 
+    // 2. We use the planDetails object directly to create the subscription
     const newSubscription = new SubscriptionModel({
       phone_no,
-      plan: planDetails,
+      plan: {
+        name: planDetails.name,
+        price_per_day: planDetails.price_per_day,
+      },
       validity_start_date: today,
       validity_end_date: endDate,
-      skip_days: skip_days || [], // अगर skip_days नहीं भेजे तो खाली array
+      skip_days: skip_days || [],
     });
 
     await newSubscription.save();

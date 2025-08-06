@@ -1,6 +1,6 @@
 // backend/controllers/SubscriptionController.js
 
-import SubscriptionModel from "../models/SubscriptionModel.js";
+import SubscriptionModel from "../model/SubscriptionModel.js";
 
 export const createSubscriptionController = async (req, res) => {
   try {

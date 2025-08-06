@@ -51,3 +51,66 @@ export const createSubscriptionController = async (req, res) => {
     res.status(500).send({ success: false, message: "Internal Server Error" });
   }
 };
+
+// --- NEW FUNCTION 1: Get user's active subscription ---
+export const getSubscriptionController = async (req, res) => {
+  try {
+    const { phone_no } = req.params;
+    // Find the subscription that is currently active for the user
+    const subscription = await SubscriptionModel.findOne({
+      phone_no,
+      is_active: true,
+    });
+
+    if (!subscription) {
+      return res
+        .status(404)
+        .send({ success: false, message: "No active subscription found." });
+    }
+
+    res.status(200).send({ success: true, subscription });
+  } catch (error) {
+    console.error("Error fetching subscription:", error);
+    res.status(500).send({ success: false, message: "Internal Server Error" });
+  }
+};
+
+// --- NEW FUNCTION 2: Update paused dates ---
+export const updatePausedDatesController = async (req, res) => {
+  try {
+    const { phone_no } = req.params;
+    const { paused_dates } = req.body; // Expecting an array of date strings
+
+    if (!Array.isArray(paused_dates)) {
+      return res
+        .status(400)
+        .send({ message: "paused_dates must be an array." });
+    }
+
+    const updatedSubscription = await SubscriptionModel.findOneAndUpdate(
+      { phone_no, is_active: true },
+      { paused_dates: paused_dates },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedSubscription) {
+      return res
+        .status(404)
+        .send({
+          success: false,
+          message: "No active subscription found to update.",
+        });
+    }
+
+    res
+      .status(200)
+      .send({
+        success: true,
+        message: "Subscription updated successfully!",
+        subscription: updatedSubscription,
+      });
+  } catch (error) {
+    console.error("Error updating paused dates:", error);
+    res.status(500).send({ success: false, message: "Internal Server Error" });
+  }
+};

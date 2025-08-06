@@ -9,9 +9,10 @@ import Userroutes from "./routes/Userroutes.js";
 import Walletroute from "./routes/Walletroute.js";
 import SubscriptionRoute from "./routes/SubscriptionRoute.js";
 import Razorpay from "razorpay";
-// import Addproductroutes from "./routes/Addproductroutes.js";
-// import cloudinary from "cloudinary";
-// import upload from "./middleware/uploadmiddleware.js";
+import SubscriptionModel from "./model/SubscriptionModel.js";
+import WalletModel from "./model/Walletmodel.js";
+import TransactionModel from "./model/TransactionModel.js";
+
 dotenv.config();
 
 connectDB();
@@ -31,8 +32,7 @@ const PORT = process.env.PORT || 3541;
 // });
 
 app.use(express.json());
-// app.use(express.json({ limit: "10mb" }));
-// app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 

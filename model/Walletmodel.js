@@ -6,7 +6,7 @@ const WalletModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true, //edited
-      match: /^[6-9]\d{9}$/,
+      // match: /^[6-9]\d{9}$/,
       index: true, //for find fast
     },
     balance: {

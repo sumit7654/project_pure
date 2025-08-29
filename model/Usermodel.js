@@ -30,6 +30,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       select: false, // Default mein password na bhejein
     },
+    // 💡 FIX: Yahaan par 'role' field joda gaya hai
+    role: {
+      type: String,
+      enum: ["customer", "admin", "deliveryBoy"], // Sirf ye 3 values ho sakti hain
+      default: "customer", // Naye user hamesha 'customer' honge
+    },
     // +++ Yahaan Address ka poora structure hai +++
     address: {
       houseNumber: String,

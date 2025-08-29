@@ -46,24 +46,20 @@ export const Registercontroller = async (req, res) => {
 export const Logincontroller = async (req, res) => {
   const { phone_no, password } = req.body;
   if (!phone_no || !password) {
-    return res
-      .status(400)
-      .send({
-        success: false,
-        message: "Phone number and password are required",
-      });
+    return res.status(400).send({
+      success: false,
+      message: "Phone number and password are required",
+    });
   }
   try {
     const user = await Usermodel.findOne({ phone_no, role: "customer" }).select(
       "+password"
     );
     if (!user) {
-      return res
-        .status(404)
-        .send({
-          success: false,
-          message: "Invalid Credentials or not a customer account",
-        });
+      return res.status(404).send({
+        success: false,
+        message: "Invalid Credentials or not a customer account",
+      });
     }
     const isMatch = await user.comparepassword(password);
     if (!isMatch) {
@@ -100,12 +96,10 @@ export const UpdateLocationController = async (req, res) => {
       longitude,
     } = req.body;
     if (!latitude || !longitude || !houseNumber) {
-      return res
-        .status(400)
-        .send({
-          success: false,
-          message: "Core address details are required.",
-        });
+      return res.status(400).send({
+        success: false,
+        message: "Core address details are required.",
+      });
     }
     const addressData = {
       houseNumber,
@@ -224,42 +218,73 @@ export const getDashboardStatsController = async (req, res) => {
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Error fetching dashboard stats",
-        error,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Error fetching dashboard stats",
+      error,
+    });
   }
 };
 
+// controllers/UserController.js
+
+// ... (baaki saare controllers waise hi rahenge) ...
+
+// 💡 DELIVERY BOY DASHBOARD KE LIYE DATA LAANE WALA FUNCTION (DEBUGGING VERSION)
 export const getTodaysDeliveriesController = async (req, res) => {
+  console.log("\n--- Today's deliveries request received ---");
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayString = today.toISOString().split("T")[0];
+    console.log(`Step 1: Set today's date to: ${today.toISOString()}`);
 
+    console.log("Step 2: Finding active subscriptions...");
     const activeSubscriptions = await SubscriptionModel.find({
       is_active: true,
       validity_end_date: { $gte: today },
     }).populate("user", "name address");
+    console.log(
+      ` -> Found ${activeSubscriptions.length} total active subscriptions.`
+    );
 
+    console.log("Step 3: Filtering deliveries for today...");
+    const todayString = today.toISOString().split("T")[0];
     const deliveries = activeSubscriptions.filter((sub) => {
-      if (!sub.user) return false;
+      if (!sub.user) {
+        console.log(
+          `  -> WARNING: Subscription ${sub._id} has no linked user. Skipping.`
+        );
+        return false;
+      }
       const pausedDateStrings = sub.paused_dates.map(
         (d) => new Date(d).toISOString().split("T")[0]
       );
-      return !pausedDateStrings.includes(todayString);
+      const isPaused = pausedDateStrings.includes(todayString);
+      if (isPaused) {
+        console.log(
+          `  -> Skipping delivery for ${sub.user.name}, it's paused today.`
+        );
+      }
+      return !isPaused;
     });
+    console.log(
+      ` -> Found ${deliveries.length} deliveries scheduled for today after filtering.`
+    );
 
     res.status(200).json({
       success: true,
       deliveries,
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({ success: false, message: "Error fetching deliveries", error });
+    // 💡 YEH SABSE ZAROORI HAI - ASLI ERROR YAHIN DIKHEGA
+    console.error(
+      "!!!!!!!!!! CATCH BLOCK ERROR in getTodaysDeliveriesController !!!!!!!!!!"
+    );
+    console.error("An unexpected error occurred:", error);
+    res.status(500).send({
+      success: false,
+      message: "An internal server error occurred while fetching deliveries.",
+      error: error.message,
+    });
   }
 };

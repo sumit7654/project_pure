@@ -54,12 +54,10 @@ export const Logincontroller = async (req, res) => {
   const { phone_no, password } = req.body;
 
   if (!phone_no || !password) {
-    return res
-      .status(400)
-      .send({
-        success: false,
-        message: "Phone number and password are required",
-      });
+    return res.status(400).send({
+      success: false,
+      message: "Phone number and password are required",
+    });
   }
 
   try {
@@ -68,12 +66,10 @@ export const Logincontroller = async (req, res) => {
       "+password"
     );
     if (!user) {
-      return res
-        .status(404)
-        .send({
-          success: false,
-          message: "Invalid Credentials or not a customer account",
-        });
+      return res.status(404).send({
+        success: false,
+        message: "Invalid Credentials or not a customer account",
+      });
     }
 
     const isMatch = await user.comparepassword(password);
@@ -115,12 +111,10 @@ export const UpdateLocationController = async (req, res) => {
     } = req.body;
 
     if (!latitude || !longitude || !houseNumber) {
-      return res
-        .status(400)
-        .send({
-          success: false,
-          message: "Core address details are required.",
-        });
+      return res.status(400).send({
+        success: false,
+        message: "Core address details are required.",
+      });
     }
 
     const addressData = {
@@ -194,27 +188,55 @@ export const registerStaffController = async (req, res) => {
   }
 };
 
-// 💡 ADMIN/DELIVERY BOY KE LOGIN KE LIYE
+// controllers/UserController.js
+
+// ... (baaki saare controllers waise hi rahenge) ...
+
+// 💡 ADMIN/DELIVERY BOY KE LOGIN KE LIYE (DEFINITIVE FIX)
 export const loginStaffController = async (req, res) => {
+  console.log("\n--- Staff login request received ---");
   try {
     const { phone_no, password } = req.body;
+    console.log(`Step 1: Received phone as text: "${phone_no}"`);
+
     if (!phone_no || !password) {
       return res
         .status(400)
         .send({ message: "Phone number and password are required" });
     }
 
-    const user = await Usermodel.findOne({ phone_no }).select("+password");
-    if (!user || user.role === "customer") {
-      return res
-        .status(404)
-        .send({ message: "Not a staff account or invalid credentials" });
+    // 💡 FIX: Frontend se aaye text waale phone number ko Number mein badlein
+    const numeric_phone_no = Number(phone_no);
+    console.log(
+      `Step 2: Searching database for phone as number: ${numeric_phone_no}`
+    );
+
+    // 💡 FIX: Database mein Number se hi search karein
+    const user = await Usermodel.findOne({ phone_no: numeric_phone_no }).select(
+      "+password"
+    );
+
+    if (!user) {
+      console.log("DB check FAILED: User not found with this number.");
+      return res.status(404).send({ message: "Invalid credentials" });
     }
+    console.log(`Step 3: User FOUND. Name: ${user.name}, Role: '${user.role}'`);
+
+    if (user.role === "customer") {
+      console.log("Authorization FAILED: User is a customer, not staff.");
+      return res
+        .status(403)
+        .send({ message: "This account is not authorized for staff panel." });
+    }
+    console.log("Step 4: User is staff. Proceeding to password check.");
 
     const isMatch = await user.comparepassword(password);
+
     if (!isMatch) {
+      console.log("Password check FAILED: Passwords do not match.");
       return res.status(401).send({ message: "Invalid credentials" });
     }
+    console.log("Step 5: Password matched successfully!");
 
     res.status(200).json({
       success: true,
@@ -227,8 +249,13 @@ export const loginStaffController = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("!!!!!!!!!! CATCH BLOCK ERROR !!!!!!!!!!");
+    console.error(
+      "An unexpected error occurred in loginStaffController:",
+      error
+    );
     res
       .status(500)
-      .send({ success: false, message: "Error in staff login", error });
+      .send({ success: false, message: "An internal server error occurred." });
   }
 };

@@ -1,4 +1,7 @@
 // import React from "react";
+
+import dotenv from "dotenv";
+dotenv.config();
 import express, { json } from "express";
 import connectDB from "./config/connectDB.js";
 import color from "colors";
@@ -13,8 +16,6 @@ import SubscriptionModel from "./model/SubscriptionModel.js";
 import WalletModel from "./model/Walletmodel.js";
 import TransactionModel from "./model/TransactionModel.js";
 import staffRoutes from "./routes/StaffRoute.js";
-
-dotenv.config();
 
 connectDB();
 

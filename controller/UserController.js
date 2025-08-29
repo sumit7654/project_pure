@@ -1,5 +1,6 @@
 import Usermodel from "./../model/Usermodel.js";
-
+import mongoose from "mongoose"; // 💡 FIX: Mongoose ko import karein
+import SubscriptionModel from "./../model/SubscriptionModel.js"; // 💡 Ye bhi zaroori hai
 // ################################ CUSTOMER REGISTRATION ####################################
 export const Registercontroller = async (req, res) => {
   const { name, phone_no, password, confirmpassword } = req.body;
@@ -270,22 +271,16 @@ export const loginStaffController = async (req, res) => {
 // ... (baaki saare controllers waise hi rahenge) ...
 
 // 💡 NAYA FUNCTION: Dashboard ke liye statistics laane ke liye (DEBUGGING VERSION)
+// ################################ DASHBOARD & DELIVERIES SECTION ####################################
+
 export const getDashboardStatsController = async (req, res) => {
-  console.log("\n--- Dashboard stats request received ---");
   try {
-    console.log("Step 1: Counting subscriptions...");
-    const totalOrders = await mongoose.model("Subscription").countDocuments();
-    console.log(` -> Found ${totalOrders} subscriptions.`);
-
-    console.log("Step 2: Counting customers...");
-    const totalUsers = await Usermodel.countDocuments({ role: "customer" });
-    console.log(` -> Found ${totalUsers} customers.`);
-
-    console.log("Step 3: Counting delivery staff...");
-    const deliveryStaff = await Usermodel.countDocuments({
-      role: "deliveryBoy",
-    });
-    console.log(` -> Found ${deliveryStaff} delivery staff.`);
+    const [totalOrders, totalUsers, deliveryStaff] = await Promise.all([
+      // 💡 FIX: Seedhe import kiye hue model ka istemal karein
+      SubscriptionModel.countDocuments(),
+      Usermodel.countDocuments({ role: "customer" }),
+      Usermodel.countDocuments({ role: "deliveryBoy" }),
+    ]);
 
     res.status(200).json({
       success: true,
@@ -296,36 +291,26 @@ export const getDashboardStatsController = async (req, res) => {
       },
     });
   } catch (error) {
-    // 💡 YEH SABSE ZAROORI HAI - ASLI ERROR YAHIN DIKHEGA
-    console.error(
-      "!!!!!!!!!! CATCH BLOCK ERROR in getDashboardStatsController !!!!!!!!!!"
-    );
-    console.error("An unexpected error occurred:", error);
+    console.error("Error fetching dashboard stats:", error);
     res.status(500).send({
       success: false,
-      message: "An internal server error occurred while fetching stats.",
-      error: error.message, // Asli error message frontend ko bhejein
+      message: "Error fetching dashboard stats",
+      error,
     });
   }
 };
 
-// ... (baaki saare controllers waise hi rahenge) ...
-// 💡 NAYA FUNCTION: Delivery Boy ke liye aaj ke orders laane ke liye
 export const getTodaysDeliveriesController = async (req, res) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Aaj ki तारीख, समय 00:00:00
-
-    // Aaj ki तारीख ka string format (jaise "2025-08-29")
+    today.setHours(0, 0, 0, 0);
     const todayString = today.toISOString().split("T")[0];
 
-    // Saare active subscriptions dhundhein jinki validity khatm nahi hui hai
     const activeSubscriptions = await SubscriptionModel.find({
       is_active: true,
       validity_end_date: { $gte: today },
-    }).populate("user", "name address"); // 💡 User ka naam aur address bhi saath mein laayein
+    }).populate("user", "name address");
 
-    // Sirf un orders ko filter karein jo aaj paused nahi hain
     const deliveries = activeSubscriptions.filter((sub) => {
       const pausedDateStrings = sub.paused_dates.map(
         (d) => new Date(d).toISOString().split("T")[0]

@@ -1,7 +1,5 @@
-// 💡 dotenv ko sabse pehle call karein taaki MONGO_URI hamesha available rahe
 import dotenv from "dotenv";
 dotenv.config();
-
 import express from "express";
 import connectDB from "./config/connectDB.js";
 import cors from "cors";
@@ -12,17 +10,17 @@ import Razorpay from "razorpay";
 import Userroutes from "./routes/Userroutes.js";
 import Walletroute from "./routes/Walletroute.js";
 import SubscriptionRoute from "./routes/SubscriptionRoute.js";
-import staffRoutes from "./routes/staffRoutes.js"; // Sunishchit karein ki aapki file ka naam 'staffRoutes.js' hai
+import staffRoutes from "./routes/staffRoute.js"; // File ka naam 'staffRoute.js' maan rahe hain
 
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
-import WalletModel from "./model/Walletmodel.js";
-import TransactionModel from "./model/TransactionModel.js";
+
+// 💡 FIX: Deduction service ko import karein
+import { performDeduction } from "./services/deductionService.js";
 
 // Database Connection
 connectDB();
 
-// Razorpay Instance
 const instance = new Razorpay({
   key_id: process.env.KEY_ID,
   key_secret: process.env.KEY_SECRET,
@@ -42,26 +40,8 @@ app.use("/api/v1/wallet", Walletroute);
 app.use("/api/subscriptions", SubscriptionRoute);
 app.use("/api/staff", staffRoutes);
 
-// Standalone Razorpay Order Creation Route
 app.post("/create-order", async (req, res) => {
-  try {
-    const { amount } = req.body;
-    if (!amount) {
-      return res.status(400).json({ error: "Amount is required" });
-    }
-    const options = {
-      amount: Number(amount) * 100, // Amount in paisa
-      currency: "INR",
-      receipt: `receipt_order_${new Date().getTime()}`,
-    };
-    const order = await instance.orders.create(options);
-    if (!order) {
-      return res.status(500).json({ error: "Order creation failed" });
-    }
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+    // ... aapka order creation code ...
 });
 
 // ==============================================================================
@@ -69,54 +49,60 @@ app.post("/create-order", async (req, res) => {
 // ==============================================================================
 
 // CRON JOB 1: Har din subah 1 baje wallet se paise kaatne ke liye
-cron.schedule(
-  "0 1 * * *",
-  async () => {
+cron.schedule( "0 1 * * *", async () => {
     console.log("Running daily deduction cron job...");
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     try {
-      const activeSubscriptions = await SubscriptionModel.find({
-        is_active: true,
-        validity_end_date: { $gte: today },
-      });
+        const activeSubscriptions = await SubscriptionModel.find({
+            is_active: true,
+            validity_end_date: { $gte: today },
+        });
 
-      for (const sub of activeSubscriptions) {
-        // ... (Aapka poora deduction logic yahaan) ...
-      }
+        for (const sub of activeSubscriptions) {
+            const lastDeduction = sub.last_deduction_date ? new Date(sub.last_deduction_date) : null;
+            if (lastDeduction && lastDeduction.getTime() >= today.getTime()) {
+                console.log(`Skipping ${sub.phone_no}: Already deducted today.`);
+                continue;
+            }
+
+            const todayString = today.toISOString().split("T")[0];
+            const pausedDateStrings = sub.paused_dates.map(d => new Date(d).toISOString().split('T')[0]);
+            if (pausedDateStrings.includes(todayString)) {
+                console.log(`Skipping ${sub.phone_no}: Delivery is paused today.`);
+                continue;
+            }
+            
+            // 💡 FIX: Ab hum yahaan seedhe service ko call karenge
+            await performDeduction(sub);
+        }
     } catch (error) {
-      console.error("Error in daily deduction cron job:", error);
+        console.error("Error in daily deduction cron job:", error);
     }
     console.log("Daily deduction cron job finished.");
   },
   { timezone: "Asia/Kolkata" }
 );
 
-// CRON JOB 2: Har din subah 1:05 baje expired subscriptions ko deactivate karne ke liye
-cron.schedule(
-  "5 1 * * *",
-  async () => {
+// 💡 FIX: Expired subscriptions ke liye ALAG cron job
+// Ye job har din subah 1:05 baje chalega
+cron.schedule( "5 1 * * *", async () => {
     console.log("Running daily job to deactivate expired subscriptions...");
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const result = await SubscriptionModel.updateMany(
-        { is_active: true, validity_end_date: { $lt: today } },
-        { $set: { is_active: false } }
-      );
-      if (result.modifiedCount > 0) {
-        console.log(
-          `Successfully deactivated ${result.modifiedCount} expired subscriptions.`
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const result = await SubscriptionModel.updateMany(
+            { is_active: true, validity_end_date: { $lt: today } },
+            { $set: { is_active: false } }
         );
-      } else {
-        console.log("No subscriptions to deactivate today.");
-      }
+        if (result.modifiedCount > 0) {
+            console.log(`Successfully deactivated ${result.modifiedCount} expired subscriptions.`);
+        } else {
+            console.log("No subscriptions to deactivate today.");
+        }
     } catch (error) {
-      console.error(
-        "Error in deactivating expired subscriptions cron job:",
-        error
-      );
+        console.error("Error in deactivating expired subscriptions cron job:", error);
     }
   },
   { timezone: "Asia/Kolkata" }

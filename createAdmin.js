@@ -3,19 +3,19 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import Usermodel from "./model/Usermodel.js"; // Apne User model ka path check kar lein
-import connectDB from "./config/connectDB.js"; // Apne DB connection file ka path check kar lein
+import Usermodel from "./model/Usermodel.js";
+import connectDB from "./config/connectDB.js";
 
 dotenv.config();
 
 // ===============================================================
 // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-//             SIRF IS HISSE MEIN APNA DATA DAALEIN
+//         SIRF IS HISSE MEIN APNA DATA DAALEIN
 // ===============================================================
 
-const ADMIN_NAME = "Sumit Kumar"; // Yahaan apna naam daalein
-const ADMIN_PHONE = "8864039966"; // Yahaan apna phone number daalein
-const ADMIN_PASSWORD = "Sumit@123"; // Yahaan apna password daalein
+const ADMIN_NAME = "Sumit Kumar";
+const ADMIN_PHONE = "8864039966"; // Yahi phone number istemal karein
+const ADMIN_PASSWORD = "Sumit@123"; // Yahi password istemal karein
 
 // ===============================================================
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -27,25 +27,30 @@ const createFirstAdmin = async () => {
   console.log("Database connected.");
 
   try {
-    const existingAdmin = await Usermodel.findOne({ role: "admin" });
-    if (existingAdmin) {
-      console.log("Admin user already exists. Aborting.");
-      process.exit(0);
+    // 💡 FIX: Usi phone number se purane user ko dhundhein
+    const existingUser = await Usermodel.findOne({ phone_no: ADMIN_PHONE });
+
+    if (existingUser) {
+      console.log(
+        `User with phone number ${ADMIN_PHONE} already exists. Deleting it first to ensure a clean state.`
+      );
+      await Usermodel.deleteOne({ phone_no: ADMIN_PHONE });
+      console.log("Old user deleted successfully.");
     }
 
-    const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
-
+    // Ab ek bilkul naya, theek se hashed user banayein
+    // NOTE: Hum yahaan .save() ka istemal karenge taaki Mongoose ka pre-save hook chale
     const adminUser = new Usermodel({
       name: ADMIN_NAME,
       phone_no: ADMIN_PHONE,
-      password: hashedPassword,
+      password: ADMIN_PASSWORD, // Plain password dein, model ise khud hash karega
       role: "admin",
     });
 
     await adminUser.save();
-    console.log("✅ Admin user created successfully!");
+    console.log("✅ New Admin user created successfully!");
     console.log(`   Phone: ${ADMIN_PHONE}`);
-    console.log(`   Password: ${ADMIN_PASSWORD}`);
+    console.log(`   Password: ${ADMIN_PASSWORD} (Use this to login)`);
   } catch (error) {
     console.error("❌ Error creating admin user:", error);
   } finally {

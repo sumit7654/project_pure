@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const subscriptionSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId, // User ki unique ID save hogi
+      ref: "User", // Ye batata hai ki ye ID 'User' collection se judi hai
+      required: true,
+    },
     phone_no: {
       type: String,
       required: true,

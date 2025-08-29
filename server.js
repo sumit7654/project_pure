@@ -12,6 +12,7 @@ import Razorpay from "razorpay";
 import SubscriptionModel from "./model/SubscriptionModel.js";
 import WalletModel from "./model/Walletmodel.js";
 import TransactionModel from "./model/TransactionModel.js";
+import staffRoutes from "./routes/StaffRoute.js";
 
 dotenv.config();
 
@@ -68,6 +69,7 @@ app.post("/create-order", async (req, res) => {
 app.use("/api/auth", Userroutes);
 app.use("/api/v1/wallet", Walletroute);
 app.use("/api/subscriptions", SubscriptionRoute);
+app.use("/api/staff", staffRoutes);
 // app.use("/api/products", Addproductroutes);
 // Cron Job - यह हर दिन सुबह 1 बजे चलेगा ('0 1 * * *')
 cron.schedule(

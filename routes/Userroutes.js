@@ -3,7 +3,7 @@ import {
   Registercontroller,
   Logincontroller,
   UpdateLocationController, // Naya controller import karein
-} from "../controllers/UserController.js";
+} from "../controller/UserController.js";
 
 const router = express.Router();
 

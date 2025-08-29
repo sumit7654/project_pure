@@ -7,7 +7,7 @@ import cron from "node-cron";
 import Userroutes from "./routes/Userroutes.js";
 import Walletroute from "./routes/Walletroute.js";
 import SubscriptionRoute from "./routes/SubscriptionRoute.js";
-import staffRoutes from "./routes/staffRoutes.js"; // File ka naam 'staffRoutes.js' maan rahe hain
+import staffRoutes from "./routes/staffRoute.js"; // File ka naam 'staffRoutes.js' maan rahe hain
 import Razorpay from "razorpay";
 import SubscriptionModel from "./model/SubscriptionModel.js";
 import WalletModel from "./model/Walletmodel.js";

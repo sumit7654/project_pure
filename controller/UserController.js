@@ -259,3 +259,72 @@ export const loginStaffController = async (req, res) => {
       .send({ success: false, message: "An internal server error occurred." });
   }
 };
+
+// controllers/UserController.js
+
+// ... (aapke purane saare controllers) ...
+
+// 💡 NAYA FUNCTION: Dashboard ke liye statistics laane ke liye
+export const getDashboardStatsController = async (req, res) => {
+  try {
+    // Hum teenon counts ko ek saath (parallel) chalayenge taaki speed fast rahe
+    const [totalOrders, totalUsers, deliveryStaff] = await Promise.all([
+      // Yahaan par aapko apne 'OrderModel' ya 'SubscriptionModel' ko import karna hoga
+      // Maan lete hain ki aapka SubscriptionModel hi orders hai
+      mongoose.model("Subscription").countDocuments(),
+
+      // Sirf customers ki ginti
+      Usermodel.countDocuments({ role: "customer" }),
+
+      // Sirf delivery boys ki ginti
+      Usermodel.countDocuments({ role: "deliveryBoy" }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalOrders,
+        totalUsers,
+        deliveryStaff,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .send({
+        success: false,
+        message: "Error fetching dashboard stats",
+        error,
+      });
+  }
+};
+
+// 💡 NAYA FUNCTION: Delivery Boy ke liye aaj ke orders laane ke liye
+export const getTodaysDeliveriesController = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Aaj ki तारीख, समय 00:00:00
+
+    // Aaj ki तारीख ka string format (jaise "2025-08-29")
+    const todayString = today.toISOString().split("T")[0];
+
+    // Saare active subscriptions dhundhein jinki validity khatm nahi hui hai
+    const activeSubscriptions = await SubscriptionModel.find({
+      is_active: true,
+      validity_end_date: { $gte: today },
+    }).populate("user", "name address"); // 💡 User ka naam aur address bhi saath mein laayein
+
+    // Sirf un orders ko filter karein jo aaj paused nahi hain
+    const deliveries = activeSubscriptions.filter(sub => {
+        const pausedDateStrings = sub.paused_dates.map(d => new Date(d).toISOString().split('T')[0]);
+        return !pausedDateStrings.includes(todayString);
+    });
+
+    res.status(200).json({
+      success: true,
+      deliveries,
+    });
+  } catch (error) {
+    res.status(500).send({ success: false, message: "Error fetching deliveries", error });
+  }
+};

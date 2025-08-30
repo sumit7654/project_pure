@@ -138,7 +138,9 @@ export const UpdateLocationController = async (req, res) => {
 
 export const registerStaffController = async (req, res) => {
   try {
+    // 💡 FIX: Ab hum 'assignedPincodes' bhi req.body se lenge
     const { name, phone_no, password, role, assignedPincodes } = req.body;
+
     if (!name || !phone_no || !password || !role) {
       return res.status(400).send({ message: "All staff fields are required" });
     }
@@ -153,6 +155,8 @@ export const registerStaffController = async (req, res) => {
         .status(400)
         .send({ message: "User with this phone number already exists" });
     }
+
+    // Naya user banate samay 'assignedPincodes' ko bhi save karein
     const user = await Usermodel.create({
       name,
       phone_no,
@@ -160,6 +164,7 @@ export const registerStaffController = async (req, res) => {
       role,
       assignedPincodes,
     });
+
     res.status(201).send({
       success: true,
       message: `${role} registered successfully`,

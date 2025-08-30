@@ -13,8 +13,12 @@ const subscriptionSchema = new mongoose.Schema(
       index: true,
     },
     plan: {
-      name: { type: String, required: true }, // जैसे "1 Litre Milk"
-      price_per_day: { type: Number, required: true }, // हर दिन का दाम
+      productId: { type: String, required: true }, // Asli product ki ID
+      productName: { type: String, required: true }, // Product ka naam
+      quantity: { type: Number, required: true, default: 1 }, // Kitni quantity
+      unit_price: { type: Number, required: true }, // Ek unit ka daam
+      price_per_day: { type: Number, required: true }, // Total (quantity * unit_price)
+      duration_days: { type: Number, required: true },
     },
     validity_start_date: {
       type: Date,
@@ -31,7 +35,7 @@ const subscriptionSchema = new mongoose.Schema(
     },
     // किसी खास तारीख को डिलीवरी रोकने के लिए
     paused_dates: {
-      type: [Date],
+      type: [String], // "YYYY-MM-DD" format mein save hoga
       default: [],
     },
     is_active: {

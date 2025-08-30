@@ -43,8 +43,8 @@ export const createSubscriptionController = async (req, res) => {
 // 💡 FIX: Ye function ab ek specific subscription ko uski ID se update karega
 export const updatePausedDatesController = async (req, res) => {
   try {
-    const { subscriptionId } = req.params; // Ab hum phone_no nahi, subscriptionId lenge
-    const { paused_dates } = req.body;
+    const { subscriptionId } = req.params;
+    const { paused_dates } = req.body; // Ye "YYYY-MM-DD" format mein strings ka array hai
 
     if (!Array.isArray(paused_dates)) {
       return res
@@ -52,18 +52,40 @@ export const updatePausedDatesController = async (req, res) => {
         .send({ message: "paused_dates must be an array." });
     }
 
+    // Pehle subscription ko database se laayein taaki hum purani dates se compare kar sakein
+    const subscription = await SubscriptionModel.findById(subscriptionId);
+    if (!subscription) {
+      return res
+        .status(404)
+        .send({
+          success: false,
+          message: "No subscription found with this ID.",
+        });
+    }
+
+    const oldPausedCount = subscription.paused_dates.length;
+    const newPausedCount = paused_dates.length;
+
+    let newValidityEndDate = new Date(subscription.validity_end_date);
+
+    // 💡 FIX: Validity update karne ka logic
+    if (newPausedCount > oldPausedCount) {
+      // Ek date pause hui hai, to validity ek din aage badhayein
+      newValidityEndDate.setDate(newValidityEndDate.getDate() + 1);
+    } else if (newPausedCount < oldPausedCount) {
+      // Ek date resume hui hai, to validity ek din peeche karein
+      newValidityEndDate.setDate(newValidityEndDate.getDate() - 1);
+    }
+
+    // Database mein dono cheezein ek saath update karein
     const updatedSubscription = await SubscriptionModel.findByIdAndUpdate(
-      subscriptionId, // ID se update karein
-      { paused_dates: paused_dates },
+      subscriptionId,
+      {
+        paused_dates: paused_dates,
+        validity_end_date: newValidityEndDate,
+      },
       { new: true }
     );
-
-    if (!updatedSubscription) {
-      return res.status(404).send({
-        success: false,
-        message: "No subscription found with this ID.",
-      });
-    }
 
     res.status(200).send({
       success: true,
@@ -71,6 +93,7 @@ export const updatePausedDatesController = async (req, res) => {
       subscription: updatedSubscription,
     });
   } catch (error) {
+    console.error("Error updating paused dates:", error);
     res
       .status(500)
       .send({ success: false, message: "Error updating paused dates", error });

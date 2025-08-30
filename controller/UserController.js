@@ -137,7 +137,7 @@ export const UpdateLocationController = async (req, res) => {
 
 export const registerStaffController = async (req, res) => {
   try {
-    const { name, phone_no, password, role } = req.body;
+    const { name, phone_no, password, role, assignedPincodes } = req.body;
     if (!name || !phone_no || !password || !role) {
       return res.status(400).send({ message: "All staff fields are required" });
     }
@@ -152,7 +152,13 @@ export const registerStaffController = async (req, res) => {
         .status(400)
         .send({ message: "User with this phone number already exists" });
     }
-    const user = await Usermodel.create({ name, phone_no, password, role });
+    const user = await Usermodel.create({
+      name,
+      phone_no,
+      password,
+      role,
+      assignedPincodes,
+    });
     res.status(201).send({
       success: true,
       message: `${role} registered successfully`,
@@ -226,65 +232,76 @@ export const getDashboardStatsController = async (req, res) => {
   }
 };
 
-// controllers/UserController.js
-
-// ... (baaki saare controllers waise hi rahenge) ...
-
-// 💡 DELIVERY BOY DASHBOARD KE LIYE DATA LAANE WALA FUNCTION (DEBUGGING VERSION)
 export const getTodaysDeliveriesController = async (req, res) => {
-  console.log("\n--- Today's deliveries request received ---");
   try {
+    const { deliveryBoyId } = req.params;
+    const deliveryBoy = await Usermodel.findById(deliveryBoyId);
+    if (!deliveryBoy || !deliveryBoy.assignedPincodes) {
+      return res.status(404).send({
+        success: false,
+        message: "Delivery boy not found or no pincodes assigned.",
+      });
+    }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    console.log(`Step 1: Set today's date to: ${today.toISOString()}`);
-
-    console.log("Step 2: Finding active subscriptions...");
-    const activeSubscriptions = await SubscriptionModel.find({
+    const allActiveSubscriptions = await SubscriptionModel.find({
       is_active: true,
       validity_end_date: { $gte: today },
     }).populate("user", "name address");
-    console.log(
-      ` -> Found ${activeSubscriptions.length} total active subscriptions.`
-    );
-
-    console.log("Step 3: Filtering deliveries for today...");
-    const todayString = today.toISOString().split("T")[0];
-    const deliveries = activeSubscriptions.filter((sub) => {
-      if (!sub.user) {
-        console.log(
-          `  -> WARNING: Subscription ${sub._id} has no linked user. Skipping.`
-        );
-        return false;
-      }
+    const assignedDeliveries = allActiveSubscriptions.filter((sub) => {
+      const userPincode = sub.user?.address?.pincode;
+      const todayString = today.toISOString().split("T")[0];
       const pausedDateStrings = sub.paused_dates.map(
         (d) => new Date(d).toISOString().split("T")[0]
       );
       const isPaused = pausedDateStrings.includes(todayString);
-      if (isPaused) {
-        console.log(
-          `  -> Skipping delivery for ${sub.user.name}, it's paused today.`
-        );
-      }
-      return !isPaused;
+      return (
+        userPincode &&
+        deliveryBoy.assignedPincodes.includes(userPincode) &&
+        !isPaused
+      );
     });
-    console.log(
-      ` -> Found ${deliveries.length} deliveries scheduled for today after filtering.`
-    );
-
     res.status(200).json({
       success: true,
-      deliveries,
+      deliveries: assignedDeliveries,
     });
   } catch (error) {
-    // 💡 YEH SABSE ZAROORI HAI - ASLI ERROR YAHIN DIKHEGA
-    console.error(
-      "!!!!!!!!!! CATCH BLOCK ERROR in getTodaysDeliveriesController !!!!!!!!!!"
+    res
+      .status(500)
+      .send({ success: false, message: "Error fetching deliveries", error });
+  }
+};
+
+export const getUnassignedDeliveriesController = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const allDeliveryBoys = await Usermodel.find({ role: "deliveryBoy" });
+    const allAssignedPincodes = new Set(
+      allDeliveryBoys.flatMap((boy) => boy.assignedPincodes)
     );
-    console.error("An unexpected error occurred:", error);
+    const allActiveSubscriptions = await SubscriptionModel.find({
+      is_active: true,
+      validity_end_date: { $gte: today },
+    }).populate("user", "name address");
+    const unassignedDeliveries = allActiveSubscriptions.filter((sub) => {
+      const userPincode = sub.user?.address?.pincode;
+      const todayString = today.toISOString().split("T")[0];
+      const pausedDateStrings = sub.paused_dates.map(
+        (d) => new Date(d).toISOString().split("T")[0]
+      );
+      const isPaused = pausedDateStrings.includes(todayString);
+      return userPincode && !allAssignedPincodes.has(userPincode) && !isPaused;
+    });
+    res.status(200).json({
+      success: true,
+      deliveries: unassignedDeliveries,
+    });
+  } catch (error) {
     res.status(500).send({
       success: false,
-      message: "An internal server error occurred while fetching deliveries.",
-      error: error.message,
+      message: "Error fetching unassigned deliveries",
+      error,
     });
   }
 };

@@ -4,6 +4,7 @@ import {
   loginStaffController,
   getDashboardStatsController,
   getTodaysDeliveriesController,
+  getUnassignedDeliveriesController,
 } from "../controller/UserController.js";
 
 const router = express.Router();
@@ -12,5 +13,6 @@ router.post("/register", registerStaffController);
 router.post("/login", loginStaffController);
 router.get("/dashboard-stats", getDashboardStatsController);
 router.get("/todays-deliveries", getTodaysDeliveriesController);
+router.get("/unassigned-deliveries", getUnassignedDeliveriesController);
 
 export default router;

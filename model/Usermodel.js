@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "admin", "deliveryBoy"], // Sirf ye 3 values ho sakti hain
       default: "customer", // Naye user hamesha 'customer' honge
     },
+    assignedPincodes: {
+      type: [String],
+      default: [],
+    },
     // +++ Yahaan Address ka poora structure hai +++
     address: {
       houseNumber: String,

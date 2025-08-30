@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Usermodel from "./../model/Usermodel.js";
 import SubscriptionModel from "./../model/SubscriptionModel.js";
+import DeliveryModel from "./../model/DeliveryModel.js"; // Delivery model import karein
 
 // ##############################################################################
 // ################################ CUSTOMER SECTION ####################################
@@ -236,42 +237,49 @@ export const getTodaysDeliveriesController = async (req, res) => {
   try {
     const { deliveryBoyId } = req.params;
     const deliveryBoy = await Usermodel.findById(deliveryBoyId);
-    if (!deliveryBoy || !deliveryBoy.assignedPincodes) {
+
+    if (
+      !deliveryBoy ||
+      !deliveryBoy.assignedPincodes ||
+      deliveryBoy.assignedPincodes.length === 0
+    ) {
       return res.status(404).send({
         success: false,
-        message: "Delivery boy not found or no pincodes assigned.",
+        message: "Delivery boy not found or no pincodes have been assigned.",
       });
     }
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const allActiveSubscriptions = await SubscriptionModel.find({
-      is_active: true,
-      validity_end_date: { $gte: today },
-    }).populate("user", "name address");
-    const assignedDeliveries = allActiveSubscriptions.filter((sub) => {
-      const userPincode = sub.user?.address?.pincode;
-      const todayString = today.toISOString().split("T")[0];
-      const pausedDateStrings = sub.paused_dates.map(
-        (d) => new Date(d).toISOString().split("T")[0]
-      );
-      const isPaused = pausedDateStrings.includes(todayString);
-      return (
-        userPincode &&
-        deliveryBoy.assignedPincodes.includes(userPincode) &&
-        !isPaused
-      );
-    });
+
+    const todayString = new Date().toISOString().split("T")[0];
+
+    // 💡 FIX: Hum ab seedhe 'Delivery' collection se data laayenge
+    const todaysDeliveries = await DeliveryModel.find({
+      delivery_date: todayString,
+      status: "Pending", // Sirf pending waale
+    })
+      .populate({
+        path: "user",
+        select: "name address",
+        // Sirf un users ko laayein jinka pincode is delivery boy ko assigned hai
+        match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
+      })
+      .populate("subscription", "plan"); // Subscription ki details bhi laayein
+
+    // Un deliveries ko filter karke hata dein jinka user pincode match nahi hua
+    const assignedDeliveries = todaysDeliveries.filter(
+      (delivery) => delivery.user
+    );
+
     res.status(200).json({
       success: true,
       deliveries: assignedDeliveries,
     });
   } catch (error) {
+    console.error("Error fetching today's deliveries:", error);
     res
       .status(500)
       .send({ success: false, message: "Error fetching deliveries", error });
   }
 };
-
 export const getUnassignedDeliveriesController = async (req, res) => {
   try {
     const today = new Date();

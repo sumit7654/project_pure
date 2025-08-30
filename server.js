@@ -11,6 +11,8 @@ import Userroutes from "./routes/Userroutes.js";
 import Walletroute from "./routes/Walletroute.js";
 import SubscriptionRoute from "./routes/SubscriptionRoute.js";
 import staffRoutes from "./routes/StaffRoute.js"; // File ka naam 'staffRoute.js' maan rahe hain
+import DeliveryModel from "./model/DeliveryModel.js"; // Naya model import karein
+import deliveryRoutes from "./routes/deliveryRoutes.js"; // Naya route import karein
 
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
@@ -39,6 +41,7 @@ app.use("/api/auth", Userroutes);
 app.use("/api/v1/wallet", Walletroute);
 app.use("/api/subscriptions", SubscriptionRoute);
 app.use("/api/staff", staffRoutes);
+app.use("/api/deliveries", deliveryRoutes); // 💡 Naya route jodein
 
 app.post("/create-order", async (req, res) => {
   // ... aapka order creation code ...
@@ -48,6 +51,34 @@ app.post("/create-order", async (req, res) => {
 // ================================ CRON JOBS ===================================
 // ==============================================================================
 
+// CRON JOB 1: Har din subah 1 baje naye deliveries banayein
+cron.schedule( "0 1 * * *", async () => {
+    console.log("Running daily job to create deliveries...");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayString = today.toISOString().split("T")[0];
+
+    const activeSubscriptions = await SubscriptionModel.find({ is_active: true, validity_end_date: { $gte: today } });
+
+    for (const sub of activeSubscriptions) {
+        const pausedDateStrings = sub.paused_dates.map(d => new Date(d).toISOString().split('T')[0]);
+        if (!pausedDateStrings.includes(todayString)) {
+            // Check karein ki is din ke liye delivery pehle se to nahi bani hai
+            const existingDelivery = await DeliveryModel.findOne({ subscription: sub._id, delivery_date: todayString });
+            if (!existingDelivery) {
+                await DeliveryModel.create({
+                    subscription: sub._id,
+                    user: sub.user,
+                    delivery_date: todayString,
+                    status: "Pending",
+                });
+            }
+        }
+    }
+    console.log("Daily delivery creation job finished.");
+  },
+  { timezone: "Asia/Kolkata" }
+);
 // CRON JOB 1: Har din subah 1 baje wallet se paise kaatne ke liye
 cron.schedule(
   "0 1 * * *",

@@ -44,7 +44,25 @@ app.use("/api/staff", staffRoutes);
 app.use("/api/deliveries", deliveryRoutes); // 💡 Naya route jodein
 
 app.post("/create-order", async (req, res) => {
-  // ... aapka order creation code ...
+  try {
+    const { amount } = req.body;
+    if (!amount) {
+      return res.status(400).json({ error: "Amount is required" });
+    }
+    const options = {
+      amount: Number(amount) * 100, // 💡 YEH SABSE ZAROORI HAI: Rupees ko Paisa mein badlein
+      currency: "INR",
+      receipt: `receipt_order_${new Date().getTime()}`,
+    };
+    const order = await instance.orders.create(options);
+    if (!order) {
+      return res.status(500).json({ error: "Order creation failed" });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error("Error in /create-order:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // ==============================================================================
@@ -52,28 +70,38 @@ app.post("/create-order", async (req, res) => {
 // ==============================================================================
 
 // CRON JOB 1: Har din subah 1 baje naye deliveries banayein
-cron.schedule( "0 1 * * *", async () => {
+cron.schedule(
+  "0 1 * * *",
+  async () => {
     console.log("Running daily job to create deliveries...");
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayString = today.toISOString().split("T")[0];
 
-    const activeSubscriptions = await SubscriptionModel.find({ is_active: true, validity_end_date: { $gte: today } });
+    const activeSubscriptions = await SubscriptionModel.find({
+      is_active: true,
+      validity_end_date: { $gte: today },
+    });
 
     for (const sub of activeSubscriptions) {
-        const pausedDateStrings = sub.paused_dates.map(d => new Date(d).toISOString().split('T')[0]);
-        if (!pausedDateStrings.includes(todayString)) {
-            // Check karein ki is din ke liye delivery pehle se to nahi bani hai
-            const existingDelivery = await DeliveryModel.findOne({ subscription: sub._id, delivery_date: todayString });
-            if (!existingDelivery) {
-                await DeliveryModel.create({
-                    subscription: sub._id,
-                    user: sub.user,
-                    delivery_date: todayString,
-                    status: "Pending",
-                });
-            }
+      const pausedDateStrings = sub.paused_dates.map(
+        (d) => new Date(d).toISOString().split("T")[0]
+      );
+      if (!pausedDateStrings.includes(todayString)) {
+        // Check karein ki is din ke liye delivery pehle se to nahi bani hai
+        const existingDelivery = await DeliveryModel.findOne({
+          subscription: sub._id,
+          delivery_date: todayString,
+        });
+        if (!existingDelivery) {
+          await DeliveryModel.create({
+            subscription: sub._id,
+            user: sub.user,
+            delivery_date: todayString,
+            status: "Pending",
+          });
         }
+      }
     }
     console.log("Daily delivery creation job finished.");
   },

@@ -19,7 +19,7 @@ export const createSubscriptionController = async (req, res) => {
       user: userId,
       phone_no,
       plan,
-      start_date: start,
+      validity_start_date: start,
       validity_end_date: end,
     });
 

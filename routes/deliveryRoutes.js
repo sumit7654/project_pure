@@ -1,7 +1,7 @@
 // routes/deliveryRoutes.js
 
 import express from "express";
-import { markAsDeliveredController } from "../controllers/DeliveryController.js";
+import { markAsDeliveredController } from "../controller/DeliveryController.js";
 
 const router = express.Router();
 

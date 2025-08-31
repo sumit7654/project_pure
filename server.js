@@ -13,7 +13,7 @@ import SubscriptionRoute from "./routes/SubscriptionRoute.js";
 import staffRoutes from "./routes/StaffRoute.js"; // File ka naam 'staffRoute.js' maan rahe hain
 import DeliveryModel from "./model/DeliveryModel.js"; // Naya model import karein
 import deliveryRoutes from "./routes/deliveryRoutes.js"; // Naya route import karein
-
+import pincodeRoutes from "./routes/pincodeRoutes.js"; // 💡 Naya route import karein
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
 
@@ -41,6 +41,7 @@ app.use("/api/auth", Userroutes);
 app.use("/api/v1/wallet", Walletroute);
 app.use("/api/subscriptions", SubscriptionRoute);
 app.use("/api/staff", staffRoutes);
+app.use("/api/pincodes", pincodeRoutes); // 💡 Naya route jodein
 app.use("/api/deliveries", deliveryRoutes); // 💡 Naya route jodein
 
 app.post("/create-order", async (req, res) => {

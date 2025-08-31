@@ -50,7 +50,7 @@ app.post("/create-order", async (req, res) => {
       return res.status(400).json({ error: "Amount is required" });
     }
     const options = {
-      amount: Number(amount) * 100, // 💡 YEH SABSE ZAROORI HAI: Rupees ko Paisa mein badlein
+      amount: Number(amount), // 💡 YEH SABSE ZAROORI HAI: Rupees ko Paisa mein badlein
       currency: "INR",
       receipt: `receipt_order_${new Date().getTime()}`,
     };

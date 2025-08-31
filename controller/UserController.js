@@ -240,8 +240,8 @@ export const getDashboardStatsController = async (req, res) => {
 
 export const getTodaysDeliveriesController = async (req, res) => {
   try {
-    const { deliveryBoyId } = req.params;
-    const deliveryBoy = await Usermodel.findById(deliveryBoyId);
+    const { staffId } = req.params;
+    const deliveryBoy = await Usermodel.findById(staffId);
 
     if (
       !deliveryBoy ||

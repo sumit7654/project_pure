@@ -24,12 +24,10 @@ export const markAsDeliveredController = async (req, res) => {
       delivery,
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Error updating delivery status",
-        error,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Error updating delivery status",
+      error,
+    });
   }
 };

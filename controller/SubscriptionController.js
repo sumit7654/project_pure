@@ -5,6 +5,7 @@ import { performDeduction } from "../services/deductionService.js";
 export const createSubscriptionController = async (req, res) => {
   try {
     const { phone_no, plan, startDate, userId } = req.body;
+
     if (!phone_no || !plan || !startDate || !userId) {
       return res
         .status(400)
@@ -19,19 +20,34 @@ export const createSubscriptionController = async (req, res) => {
       user: userId,
       phone_no,
       plan,
-      validity_start_date: start,
+      start_date: start,
       validity_end_date: end,
     });
 
+    // Pehle din ka paisa kaatein
     console.log("Subscription created. Performing initial deduction...");
     await performDeduction(newSubscription);
 
+    // 💡 FIX: Pehli delivery ke liye turant ek delivery record banayein
+    console.log("Creating initial delivery record for the start date...");
+    const startDateString = start.toISOString().split("T")[0]; // "YYYY-MM-DD" format
+
+    await DeliveryModel.create({
+      subscription: newSubscription._id,
+      user: userId,
+      delivery_date: startDateString,
+      status: "Pending", // Default status
+    });
+    console.log("Initial delivery record created successfully.");
+
     res.status(201).json({
       success: true,
-      message: "Subscription created and first day charged successfully.",
+      message:
+        "Subscription created and first delivery scheduled successfully.",
       subscription: newSubscription,
     });
   } catch (error) {
+    console.error("Error creating subscription:", error);
     res.status(500).send({
       success: false,
       message: "Error creating subscription",
@@ -55,12 +71,10 @@ export const updatePausedDatesController = async (req, res) => {
     // Pehle subscription ko database se laayein taaki hum purani dates se compare kar sakein
     const subscription = await SubscriptionModel.findById(subscriptionId);
     if (!subscription) {
-      return res
-        .status(404)
-        .send({
-          success: false,
-          message: "No subscription found with this ID.",
-        });
+      return res.status(404).send({
+        success: false,
+        message: "No subscription found with this ID.",
+      });
     }
 
     const oldPausedCount = subscription.paused_dates.length;

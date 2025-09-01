@@ -1,6 +1,6 @@
 import SubscriptionModel from "../model/SubscriptionModel.js";
 import { performDeduction } from "../services/deductionService.js";
-
+import DeliveryModel from "../model/DeliveryModel.js";
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
   try {
@@ -42,13 +42,11 @@ export const createSubscriptionController = async (req, res) => {
       subscription: newSubscription,
     });
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Error creating subscription",
-        error: error.message,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Error creating subscription",
+      error: error.message,
+    });
   }
 };
 

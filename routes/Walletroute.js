@@ -6,7 +6,7 @@ import {
 
 const router = express.Router();
 
-router.post("/add-money", addMoneyController);
+router.post("/add-money/:phone_no", addMoneyController);
 router.get("/balance/:phone_no", getBalanceController);
 
 export default router;

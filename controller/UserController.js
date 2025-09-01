@@ -214,6 +214,30 @@ export const loginStaffController = async (req, res) => {
   }
 };
 
+export const getDashboardStatsController = async (req, res) => {
+  try {
+    const [totalSubscriptions, totalUsers, deliveryStaff] = await Promise.all([
+      SubscriptionModel.countDocuments(),
+      Usermodel.countDocuments({ role: "customer" }),
+      Usermodel.countDocuments({ role: "deliveryBoy" }),
+    ]);
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalOrders: totalSubscriptions,
+        totalUsers,
+        deliveryStaff,
+      },
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error fetching dashboard stats",
+      error,
+    });
+  }
+};
+
 export const getTodaysDeliveriesController = async (req, res) => {
   console.log("\n--- Request received for today's deliveries ---");
   try {
@@ -308,7 +332,6 @@ export const getTodaysDeliveriesController = async (req, res) => {
       .send({ success: false, message: "Error fetching deliveries", error });
   }
 };
-
 export const getUnassignedDeliveriesController = async (req, res) => {
   try {
     const today = new Date();

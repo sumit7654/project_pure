@@ -24,21 +24,16 @@ export const createSubscriptionController = async (req, res) => {
       validity_end_date: end,
     });
 
-    // Pehle din ka paisa kaatein
-    console.log("Subscription created. Performing initial deduction...");
     await performDeduction(newSubscription);
 
-    // 💡 FIX: Pehli delivery ke liye turant ek delivery record banayein
-    console.log("Creating initial delivery record for the start date...");
-    const startDateString = start.toISOString().split("T")[0]; // "YYYY-MM-DD" format
-
+    // Pehli delivery ke liye turant ek delivery record banayein
+    const startDateString = start.toISOString().split("T")[0];
     await DeliveryModel.create({
       subscription: newSubscription._id,
       user: userId,
       delivery_date: startDateString,
-      status: "Pending", // Default status
+      status: "Pending",
     });
-    console.log("Initial delivery record created successfully.");
 
     res.status(201).json({
       success: true,
@@ -47,12 +42,13 @@ export const createSubscriptionController = async (req, res) => {
       subscription: newSubscription,
     });
   } catch (error) {
-    console.error("Error creating subscription:", error);
-    res.status(500).send({
-      success: false,
-      message: "Error creating subscription",
-      error: error.message,
-    });
+    res
+      .status(500)
+      .send({
+        success: false,
+        message: "Error creating subscription",
+        error: error.message,
+      });
   }
 };
 

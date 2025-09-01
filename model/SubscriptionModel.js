@@ -20,7 +20,7 @@ const subscriptionSchema = new mongoose.Schema(
       price_per_day: { type: Number, required: true }, // Total (quantity * unit_price)
       duration_days: { type: Number, required: true },
     },
-    validity_start_date: {
+    start_date: {
       type: Date,
       required: true,
     },

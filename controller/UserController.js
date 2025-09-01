@@ -214,64 +214,84 @@ export const loginStaffController = async (req, res) => {
   }
 };
 
-export const getDashboardStatsController = async (req, res) => {
-  try {
-    const [totalSubscriptions, totalUsers, deliveryStaff] = await Promise.all([
-      SubscriptionModel.countDocuments(),
-      Usermodel.countDocuments({ role: "customer" }),
-      Usermodel.countDocuments({ role: "deliveryBoy" }),
-    ]);
-    res.status(200).json({
-      success: true,
-      stats: {
-        totalOrders: totalSubscriptions,
-        totalUsers,
-        deliveryStaff,
-      },
-    });
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Error fetching dashboard stats",
-      error,
-    });
-  }
-};
-
 export const getTodaysDeliveriesController = async (req, res) => {
+  console.log("\n--- Request received for today's deliveries ---");
   try {
-    const { staffId } = req.params;
-    const deliveryBoy = await Usermodel.findById(staffId);
+    const { deliveryBoyId } = req.params;
+    console.log(`Step 1: Received deliveryBoyId: ${deliveryBoyId}`);
+
+    const deliveryBoy = await Usermodel.findById(deliveryBoyId);
+    if (!deliveryBoy) {
+      console.log("  -> ERROR: Delivery boy not found in database.");
+      return res
+        .status(404)
+        .send({ success: false, message: "Delivery boy not found." });
+    }
+    console.log(`Step 2: Found Delivery Boy: ${deliveryBoy.name}`);
+    console.log(
+      `   -> Assigned Pincodes: [${deliveryBoy.assignedPincodes.join(", ")}]`
+    );
 
     if (
-      !deliveryBoy ||
       !deliveryBoy.assignedPincodes ||
       deliveryBoy.assignedPincodes.length === 0
     ) {
-      return res.status(404).send({
-        success: false,
-        message: "Delivery boy not found or no pincodes have been assigned.",
-      });
+      console.log("  -> ERROR: No pincodes assigned to this delivery boy.");
+      return res.status(200).json({ success: true, deliveries: [] }); // Khaali list bhejein
     }
 
     const todayString = new Date().toISOString().split("T")[0];
+    console.log(`Step 3: Searching for deliveries for date: ${todayString}`);
 
-    // 💡 FIX: Hum ab seedhe 'Delivery' collection se data laayenge
-    const todaysDeliveries = await DeliveryModel.find({
+    // Pehle saari pending deliveries laayein, bina pincode filter ke
+    const allTodaysDeliveries = await DeliveryModel.find({
       delivery_date: todayString,
-      status: "Pending", // Sirf pending waale
+      status: "Pending",
     })
-      .populate({
-        path: "user",
-        select: "name address",
-        // Sirf un users ko laayein jinka pincode is delivery boy ko assigned hai
-        match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
-      })
-      .populate("subscription", "plan"); // Subscription ki details bhi laayein
+      .populate("user", "name address")
+      .populate("subscription", "plan");
+    console.log(
+      `Step 4: Found ${allTodaysDeliveries.length} total pending deliveries for today.`
+    );
 
-    // Un deliveries ko filter karke hata dein jinka user pincode match nahi hua
-    const assignedDeliveries = todaysDeliveries.filter(
-      (delivery) => delivery.user
+    if (allTodaysDeliveries.length === 0) {
+      return res.status(200).json({ success: true, deliveries: [] });
+    }
+
+    console.log("\n--- Starting Manual Filtering ---");
+    // Ab unhe manually filter karein
+    const assignedDeliveries = allTodaysDeliveries.filter((delivery) => {
+      const userPincode = delivery.user?.address?.pincode;
+      console.log(
+        `\n- Checking delivery for: ${delivery.user?.name || "Unknown User"}`
+      );
+      console.log(`  - Customer Pincode: ${userPincode}`);
+
+      if (!userPincode) {
+        console.log("  - RESULT: SKIPPED (Customer has no pincode)");
+        return false;
+      }
+
+      const isAssigned = deliveryBoy.assignedPincodes.includes(userPincode);
+      if (isAssigned) {
+        console.log(
+          `  - RESULT: MATCHED! (${userPincode} is in [${deliveryBoy.assignedPincodes.join(
+            ", "
+          )}])`
+        );
+      } else {
+        console.log(
+          `  - RESULT: SKIPPED (${userPincode} is NOT in [${deliveryBoy.assignedPincodes.join(
+            ", "
+          )}])`
+        );
+      }
+      return isAssigned;
+    });
+
+    console.log(`\n--- Filtering Complete ---`);
+    console.log(
+      `Step 5: Found ${assignedDeliveries.length} deliveries assigned to this boy.`
     );
 
     res.status(200).json({
@@ -279,12 +299,16 @@ export const getTodaysDeliveriesController = async (req, res) => {
       deliveries: assignedDeliveries,
     });
   } catch (error) {
-    console.error("Error fetching today's deliveries:", error);
+    console.error(
+      "!!!!!!!!!! CATCH BLOCK ERROR in getTodaysDeliveriesController !!!!!!!!!!"
+    );
+    console.error("An unexpected error occurred:", error);
     res
       .status(500)
       .send({ success: false, message: "Error fetching deliveries", error });
   }
 };
+
 export const getUnassignedDeliveriesController = async (req, res) => {
   try {
     const today = new Date();
@@ -293,6 +317,7 @@ export const getUnassignedDeliveriesController = async (req, res) => {
     const allAssignedPincodes = new Set(
       allDeliveryBoys.flatMap((boy) => boy.assignedPincodes)
     );
+    console.log("All assigned pincode : ", allAssignedPincodes);
     const allActiveSubscriptions = await SubscriptionModel.find({
       is_active: true,
       validity_end_date: { $gte: today },

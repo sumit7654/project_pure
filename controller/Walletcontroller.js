@@ -7,6 +7,9 @@ import WalletModel from "../model/Walletmodel.js";
 import TransactionModel from "../model/TransactionModel.js";
 
 export const addMoneyController = async (req, res) => {
+  console.log("Phone from params:", req.params.phone_no);
+console.log("Phone from user:", req.user?.phone_no);
+
   const session = await mongoose.startSession();
   session.startTransaction();
   try {

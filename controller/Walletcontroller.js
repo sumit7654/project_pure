@@ -10,7 +10,8 @@ export const addMoneyController = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { phone_no, amount, razorpayPaymentId } = req.body;
+    const { amount, razorpayPaymentId } = req.body;
+    const { phone_no } = req.params; // <-- Yahan se lo
 
     if (!phone_no || !amount || !razorpayPaymentId) {
       return res.status(400).send({

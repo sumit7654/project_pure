@@ -2,6 +2,33 @@
 
 import DeliveryModel from "../model/DeliveryModel.js";
 
+export const createDeliveryController = async (req, res) => {
+  try {
+    const { subscriptionId, userId, deliveryDate } = req.body;
+
+    const delivery = new DeliveryModel({
+      subscription: subscriptionId,
+      user: userId,
+      delivery_date: deliveryDate, // "YYYY-MM-DD"
+      // status default: "Pending"
+    });
+
+    await delivery.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Delivery created successfully",
+      delivery,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating delivery",
+      error,
+    });
+  }
+};
+
 export const markAsDeliveredController = async (req, res) => {
   try {
     const { deliveryId } = req.params;

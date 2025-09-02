@@ -2,58 +2,43 @@
 
 import DeliveryModel from "../model/DeliveryModel.js";
 
-export const createDeliveryController = async (req, res) => {
-  try {
-    const { subscriptionId, userId, deliveryDate } = req.body;
-
-    const delivery = new DeliveryModel({
-      subscription: subscriptionId,
-      user: userId,
-      delivery_date: deliveryDate, // "YYYY-MM-DD"
-      // status default: "Pending"
-    });
-
-    await delivery.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Delivery created successfully",
-      delivery,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error creating delivery",
-      error,
-    });
-  }
-};
-
 export const markAsDeliveredController = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { deliveryId } = req.params;
 
-    const delivery = await DeliveryModel.findByIdAndUpdate(
-      deliveryId,
+    const delivery = await DeliveryModel.findOneAndUpdate(
+      { _id: deliveryId, status: "Pending" }, // Sirf pending waale ko hi update karega
       { status: "Delivered" },
-      { new: true }
-    ).populate("subscription"); // 💡 Subscription ki details bhi saath mein laayein
+      { new: true, session }
+    ).populate("subscription");
 
     if (!delivery) {
-      return res
-        .status(404)
-        .send({ success: false, message: "Delivery not found." });
+      await session.abortTransaction();
+      session.endSession();
+      // Iska matlab ya to delivery ID galat hai ya user ne button do baar daba diya
+      return res.status(404).send({
+        success: false,
+        message: "Delivery not found or already processed.",
+      });
     }
 
-    // 💡 FIX: Yahaan par check karein ki kya ye ek one-time plan tha
     const subscription = delivery.subscription;
+    // 💡 SUDHAR YAHAN HAI: Yahaan par saaf-saaf check kiya jaa raha hai ki kya ye one-time plan tha
     if (subscription && subscription.plan.duration_days === 1) {
       console.log(
         `One-time subscription ${subscription._id} completed. Deactivating...`
       );
-      subscription.is_active = false;
-      await subscription.save();
+      await SubscriptionModel.updateOne(
+        { _id: subscription._id },
+        { is_active: false },
+        { session }
+      );
     }
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -61,7 +46,9 @@ export const markAsDeliveredController = async (req, res) => {
       delivery,
     });
   } catch (error) {
-    console.error("Error marking delivery as complete:", error);
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error in markAsDeliveredController:", error);
     res.status(500).send({
       success: false,
       message: "Error updating delivery status",

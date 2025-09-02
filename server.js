@@ -69,7 +69,75 @@ app.post("/create-order", async (req, res) => {
 // ==============================================================================
 // ================================ CRON JOBS ===================================
 // ==============================================================================
+// Ye job har raat 11:59 PM par chalega
+cron.schedule(
+  "59 23 * * *",
+  async () => {
+    console.log("Running daily job to handle undelivered one-time orders...");
+    try {
+      const todayString = new Date().toISOString().split("T")[0];
 
+      // Aaj ke saare "Pending" deliveries dhundhein
+      const pendingDeliveries = await DeliveryModel.find({
+        delivery_date: todayString,
+        status: "Pending",
+      })
+        .populate("subscription")
+        .populate("user");
+
+      if (pendingDeliveries.length === 0) {
+        console.log("No pending deliveries to process.");
+        return;
+      }
+
+      for (const delivery of pendingDeliveries) {
+        const subscription = delivery.subscription;
+
+        // Sirf "one-time" (1 din ke) plans ko handle karein
+        if (subscription && subscription.plan.duration_days === 1) {
+          console.log(
+            `Processing undelivered one-time order ${delivery._id} for user ${delivery.user.phone_no}`
+          );
+
+          // Step 1: Delivery ko "Cancelled" mark karein
+          delivery.status = "Cancelled";
+
+          // Step 2: Parent subscription ko "inactive" karein
+          subscription.is_active = false;
+
+          // Step 3: Paise wallet mein waapas karein
+          const wallet = await WalletModel.findOne({
+            phone_no: delivery.user.phone_no,
+          });
+          if (wallet) {
+            const refundAmount = subscription.plan.price_per_day;
+            wallet.balance += refundAmount;
+
+            // Ek credit transaction banayein
+            await TransactionModel.create({
+              walletId: wallet._id,
+              amount: refundAmount,
+              type: "credit",
+              status: "successful",
+              description: `Refund for undelivered one-time order #${delivery._id}`,
+            });
+
+            await wallet.save();
+          }
+
+          await delivery.save();
+          await subscription.save();
+          console.log(
+            `Order ${delivery._id} cancelled and ₹${subscription.plan.price_per_day} refunded.`
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error in handling undelivered orders cron job:", error);
+    }
+  },
+  { timezone: "Asia/Kolkata" }
+);
 // CRON JOB 1: Har din subah 1 baje naye deliveries banayein
 cron.schedule(
   "0 1 * * *",

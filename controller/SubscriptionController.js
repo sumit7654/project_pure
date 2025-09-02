@@ -1,47 +1,59 @@
+import mongoose from "mongoose";
 import SubscriptionModel from "../model/SubscriptionModel.js";
 import { performDeduction } from "../services/deductionService.js";
 import DeliveryModel from "../model/DeliveryModel.js";
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { phone_no, plan, startDate, userId } = req.body;
 
     if (!phone_no || !plan || !startDate || !userId) {
-      return res
-        .status(400)
-        .send({ success: false, message: "Missing required fields." });
+      throw new Error("Missing required fields for subscription.");
     }
 
     const start = new Date(startDate);
     const end = new Date(start);
     end.setDate(start.getDate() + plan.duration_days);
 
-    const newSubscription = await SubscriptionModel.create({
+    const newSubscription = new SubscriptionModel({
       user: userId,
       phone_no,
       plan,
       start_date: start,
       validity_end_date: end,
     });
+    await newSubscription.save({ session });
 
-    await performDeduction(newSubscription);
+    // 💡 SUDHAR YAHAN HAI: Paise kaatne ka kaam bhi transaction ke andar hoga
+    await performDeduction(newSubscription, session);
 
-    // Pehli delivery ke liye turant ek delivery record banayein
+    // 💡 SUDHAR YAHAN HAI: Pehli delivery bhi transaction ke andar hi banegi
     const startDateString = start.toISOString().split("T")[0];
-    await DeliveryModel.create({
-      subscription: newSubscription._id,
-      user: userId,
-      delivery_date: startDateString,
-      status: "Pending",
-    });
+    await DeliveryModel.create(
+      [
+        {
+          subscription: newSubscription._id,
+          user: userId,
+          delivery_date: startDateString,
+        },
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({
       success: true,
-      message:
-        "Subscription created and first delivery scheduled successfully.",
+      message: "Subscription created and first delivery scheduled.",
       subscription: newSubscription,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Error in createSubscriptionController:", error);
     res.status(500).send({
       success: false,
       message: "Error creating subscription",
@@ -54,7 +66,7 @@ export const createSubscriptionController = async (req, res) => {
 export const updatePausedDatesController = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
-    const { paused_dates } = req.body; // Ye "YYYY-MM-DD" format mein strings ka array hai
+    const { paused_dates } = req.body;
 
     if (!Array.isArray(paused_dates)) {
       return res
@@ -62,30 +74,21 @@ export const updatePausedDatesController = async (req, res) => {
         .send({ message: "paused_dates must be an array." });
     }
 
-    // Pehle subscription ko database se laayein taaki hum purani dates se compare kar sakein
     const subscription = await SubscriptionModel.findById(subscriptionId);
     if (!subscription) {
-      return res.status(404).send({
-        success: false,
-        message: "No subscription found with this ID.",
-      });
+      return res
+        .status(404)
+        .send({ success: false, message: "Subscription not found." });
     }
 
     const oldPausedCount = subscription.paused_dates.length;
     const newPausedCount = paused_dates.length;
-
     let newValidityEndDate = new Date(subscription.validity_end_date);
 
-    // 💡 FIX: Validity update karne ka logic
-    if (newPausedCount > oldPausedCount) {
-      // Ek date pause hui hai, to validity ek din aage badhayein
-      newValidityEndDate.setDate(newValidityEndDate.getDate() + 1);
-    } else if (newPausedCount < oldPausedCount) {
-      // Ek date resume hui hai, to validity ek din peeche karein
-      newValidityEndDate.setDate(newValidityEndDate.getDate() - 1);
-    }
+    // 💡 SUDHAR YAHAN HAI: Validity update karne ka saaf-suthra logic
+    const dateDifference = newPausedCount - oldPausedCount;
+    newValidityEndDate.setDate(newValidityEndDate.getDate() + dateDifference);
 
-    // Database mein dono cheezein ek saath update karein
     const updatedSubscription = await SubscriptionModel.findByIdAndUpdate(
       subscriptionId,
       {

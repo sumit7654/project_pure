@@ -1,5 +1,5 @@
 // controllers/DeliveryController.js
-
+import mongoose from "mongoose";
 import DeliveryModel from "../model/DeliveryModel.js";
 
 export const markAsDeliveredController = async (req, res) => {

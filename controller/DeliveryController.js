@@ -37,12 +37,22 @@ export const markAsDeliveredController = async (req, res) => {
       deliveryId,
       { status: "Delivered" },
       { new: true }
-    );
+    ).populate("subscription"); // 💡 Subscription ki details bhi saath mein laayein
 
     if (!delivery) {
       return res
         .status(404)
         .send({ success: false, message: "Delivery not found." });
+    }
+
+    // 💡 FIX: Yahaan par check karein ki kya ye ek one-time plan tha
+    const subscription = delivery.subscription;
+    if (subscription && subscription.plan.duration_days === 1) {
+      console.log(
+        `One-time subscription ${subscription._id} completed. Deactivating...`
+      );
+      subscription.is_active = false;
+      await subscription.save();
     }
 
     res.status(200).json({
@@ -51,6 +61,7 @@ export const markAsDeliveredController = async (req, res) => {
       delivery,
     });
   } catch (error) {
+    console.error("Error marking delivery as complete:", error);
     res.status(500).send({
       success: false,
       message: "Error updating delivery status",

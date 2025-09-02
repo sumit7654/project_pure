@@ -1,6 +1,7 @@
 // controllers/DeliveryController.js
 import mongoose from "mongoose";
 import DeliveryModel from "../model/DeliveryModel.js";
+import SubscriptionModel from "../model/SubscriptionModel.js";
 
 export const markAsDeliveredController = async (req, res) => {
   const session = await mongoose.startSession();

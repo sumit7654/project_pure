@@ -1,11 +1,13 @@
 // routes/routeRoutes.js
-
 import express from "express";
-import { getOptimizedRouteController } from "../controller/RouteController.js";
+import { getDeliveryLocationsController } from "../controllers/RouteController.js";
 
 const router = express.Router();
 
-// GET /api/routes/delivery-route/:deliveryBoyId
-router.get("/delivery-route/:deliveryBoyId", getOptimizedRouteController);
+// 💡 SUDHAR YAHAN HAI: Route ka naam aur controller badal diya gaya hai
+router.get(
+  "/delivery-locations/:deliveryBoyId",
+  getDeliveryLocationsController
+);
 
 export default router;

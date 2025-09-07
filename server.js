@@ -17,7 +17,7 @@ import pincodeRoutes from "./routes/pincodeRoutes.js"; // 💡 Naya route import
 import routeRoutes from "./routes/routeRoutes.js"; // 💡 Naya route import karein
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
-import WalletModel from "./model/Walletmodel";
+import WalletModel from "./model/Walletmodel.js";
 
 // 💡 FIX: Deduction service ko import karein
 import { performDeduction } from "./services/deductionService.js";

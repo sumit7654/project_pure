@@ -1,6 +1,6 @@
 // routes/routeRoutes.js
 import express from "express";
-import { getDeliveryLocationsController } from "../controllers/RouteController.js";
+import { getDeliveryLocationsController } from "../controller/RouteController.js";
 
 const router = express.Router();
 

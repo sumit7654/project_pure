@@ -14,7 +14,7 @@ import staffRoutes from "./routes/StaffRoute.js"; // File ka naam 'staffRoute.js
 import DeliveryModel from "./model/DeliveryModel.js"; // Naya model import karein
 import deliveryRoutes from "./routes/deliveryRoutes.js"; // Naya route import karein
 import pincodeRoutes from "./routes/pincodeRoutes.js"; // 💡 Naya route import karein
-import pincodeRoutes from "./routes/routeRoutes.js"; // 💡 Naya route import karein
+import routeRoutes from "./routes/routeRoutes.js"; // 💡 Naya route import karein
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
 

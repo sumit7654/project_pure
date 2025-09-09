@@ -7,23 +7,18 @@ const transactionSchema = new mongoose.Schema(
       ref: "Wallet",
       required: true,
     },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    type: {
-      type: String,
-      enum: ["credit", "debit"],
-      required: true,
-    },
+    amount: { type: Number, required: true },
+    type: { type: String, enum: ["credit", "debit"], required: true },
     status: {
-      type: String, // "successful", "failed", "pending"
+      type: String,
       enum: ["successful", "failed", "pending"],
       required: true,
     },
-    razorpayPaymentId: {
+    razorpayPaymentId: { type: String },
+    // 💡 SUDHAR YAHAN HAI: Transaction ka kaaran save karne ke liye
+    description: {
       type: String,
-      default: null,
+      default: "Transaction",
     },
   },
   { timestamps: true }

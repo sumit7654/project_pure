@@ -8,7 +8,7 @@ import TransactionModel from "../model/TransactionModel.js";
 
 export const addMoneyController = async (req, res) => {
   console.log("Phone from params:", req.params.phone_no);
-console.log("Phone from user:", req.user?.phone_no);
+  console.log("Phone from user:", req.user?.phone_no);
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -48,6 +48,7 @@ console.log("Phone from user:", req.user?.phone_no);
           type: "credit",
           status: "successful",
           razorpayPaymentId: razorpayPaymentId,
+          description: "Wallet recharge via Razorpay",
         },
       ],
       { session }
@@ -95,5 +96,26 @@ export const getBalanceController = async (req, res) => {
     return res
       .status(500)
       .send({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const getTransactionHistoryController = async (req, res) => {
+  try {
+    const { phone_no } = req.params;
+    const wallet = await WalletModel.findOne({ phone_no });
+
+    if (!wallet) {
+      return res.status(200).json({ success: true, transactions: [] }); // Khaali list bhejein
+    }
+
+    const transactions = await TransactionModel.find({
+      walletId: wallet._id,
+    }).sort({ createdAt: -1 }); // Sabse naya sabse upar
+
+    res.status(200).json({ success: true, transactions });
+  } catch (error) {
+    res
+      .status(500)
+      .send({ success: false, message: "Error fetching transaction history" });
   }
 };

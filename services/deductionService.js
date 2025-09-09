@@ -29,7 +29,7 @@ export const performDeduction = async (subscription) => {
       amount: subscription.plan.price_per_day,
       type: "debit",
       status: "successful",
-      description: `Daily subscription for ${subscription.plan.name}`,
+      description: `Daily subscription for ${subscription.plan.productName}`,
       razorpayPaymentId: `SUB_${subscription._id}_${today.getTime()}`,
     });
 

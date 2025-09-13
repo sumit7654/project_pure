@@ -143,7 +143,7 @@ cron.schedule(
 );
 // CRON JOB 1: Har din subah 1 baje naye deliveries banayein
 cron.schedule(
-  "59 23 * * *",
+  "01 00 * * *",
   async () => {
     console.log("Running daily job to create deliveries...");
     const today = new Date();

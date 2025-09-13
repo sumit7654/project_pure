@@ -327,36 +327,50 @@ export const getUnassignedDeliveriesController = async (req, res) => {
 
 export const applyReferralCodeController = async (req, res) => {
   try {
-    const { userId } = req.params; // Logged-in user ki ID
+    const { userId } = req.params; // The ID of the user trying to APPLY the code
     const { referralCode } = req.body;
 
     if (!referralCode) {
       return res.status(400).send({ message: "Referral code is required." });
     }
 
-    // 1. Refer karne wale user ko dhoondhein
-    const referrer = await Usermodel.findOne({ referralCode });
+    // ✅ FIX #1: Make the search case-insensitive using a regular expression
+    const referrer = await Usermodel.findOne({
+      referralCode: { $regex: new RegExp(`^${referralCode}$`, "i") },
+    });
+
     if (!referrer) {
       return res.status(404).send({ message: "Invalid referral code." });
     }
 
-    // 2. Naye user ko update karein
+    // Find the user who is logged in
     const user = await Usermodel.findById(userId);
-    if (user.referredBy) {
+
+    // ✅ FIX #2: Prevent a user from using their own referral code
+    if (referrer._id.toString() === user._id.toString()) {
       return res
         .status(400)
-        .send({ message: "Referral code already applied." });
+        .send({ message: "You cannot use your own referral code." });
     }
 
-    user.referredBy = referralCode;
+    if (user.referredBy) {
+      return res.status(400).send({
+        message: "A referral code has already been applied to your account.",
+      });
+    }
+
+    user.referredBy = referrer.referralCode; // Store the original, properly cased code
     await user.save();
 
     res
       .status(200)
       .send({ success: true, message: "Referral code applied successfully!" });
   } catch (error) {
-    res
-      .status(500)
-      .send({ success: false, message: "Error applying code.", error });
+    console.error("APPLY REFERRAL ERROR:", error); // Better logging
+    res.status(500).send({
+      success: false,
+      message: "Error applying code.",
+      error: error.message,
+    });
   }
 };

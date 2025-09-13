@@ -2,101 +2,156 @@ import mongoose from "mongoose";
 import SubscriptionModel from "../model/SubscriptionModel.js";
 import { performDeduction } from "../services/deductionService.js";
 import DeliveryModel from "../model/DeliveryModel.js";
+import Walletmodel from "../model/Walletmodel.js";
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
+  // Start a new database session for the transaction
   const session = await mongoose.startSession();
   session.startTransaction();
-  try {
-    const { phone_no, plan, startDate, userId } = req.body;
 
-    if (!phone_no || !plan || !startDate || !userId) {
-      throw new Error("Missing required fields for subscription.");
+  try {
+    const { userId, plan, quantity, startDate } = req.body;
+
+    // 1. Validate input
+    if (!userId || !plan || !quantity || !startDate) {
+      throw new Error("User ID, plan, quantity, and start date are required.");
     }
 
-    const start = new Date(startDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + plan.duration_days);
+    // 2. Find the user and their wallet within the transaction
+    const user = await Usermodel.findById(userId).session(session);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    const wallet = await WalletModel.findOne({
+      phone_no: user.phone_no,
+    }).session(session);
+    if (!wallet) {
+      throw new Error("Wallet not found for this user.");
+    }
 
-    const newSubscription = new SubscriptionModel({
-      user: userId,
-      phone_no,
-      plan,
-      start_date: start,
-      validity_end_date: end,
-    });
-    await newSubscription.save({ session });
+    // 3. Calculate total price and subscription end date
+    const pricePerDay = plan.price_per_day;
+    const durationDays = plan.duration_days;
+    const totalPrice = pricePerDay * quantity * durationDays;
 
-    // 💡 SUDHAR YAHAN HAI: Paise kaatne ka kaam bhi transaction ke andar hoga
-    await performDeduction(newSubscription, session);
+    const validityEndDate = new Date(startDate);
+    validityEndDate.setDate(validityEndDate.getDate() + durationDays);
 
-    // 💡 SUDHAR YAHAN HAI: Pehli delivery bhi transaction ke andar hi banegi
-    const startDateString = start.toISOString().split("T")[0];
-    await DeliveryModel.create(
+    // 4. Check if the user has enough balance
+    if (wallet.balance < totalPrice) {
+      throw new Error("Insufficient wallet balance to subscribe.");
+    }
+
+    // 5. Deduct the amount from the wallet
+    wallet.balance -= totalPrice;
+    await wallet.save({ session });
+
+    // 6. Create a transaction record for the deduction
+    await TransactionModel.create(
       [
         {
-          subscription: newSubscription._id,
-          user: userId,
-          delivery_date: startDateString,
+          walletId: wallet._id,
+          amount: totalPrice,
+          type: "debit",
+          status: "successful",
+          description: `Subscription for ${plan.productName}`,
         },
       ],
       { session }
     );
 
-    await session.commitTransaction();
-    session.endSession();
-    // ✅ NAYA LOGIC: INAAM DENE KE LIYE
-    const user = await Usermodel.findById(req.user.id); // Maan rahe hain ki user ID request me hai
+    // 7. Create the new subscription document
+    const newSubscription = (
+      await SubscriptionModel.create(
+        [
+          {
+            user: userId,
+            phone_no: user.phone_no,
+            plan: {
+              productName: plan.productName,
+              price_per_day: pricePerDay,
+              quantity: quantity,
+              duration_days: durationDays,
+              delivery_type: plan.delivery_type || "Daily",
+            },
+            start_date: new Date(startDate),
+            validity_end_date: validityEndDate,
+            is_active: true,
+            last_deduction_date: new Date(),
+          },
+        ],
+        { session }
+      )
+    )[0];
 
-    // Check karein ki kya yeh user ka pehla subscription hai aur usne code use kiya hai
+    // 8. Handle Referral Reward Logic (if applicable)
     const userSubscriptionsCount = await SubscriptionModel.countDocuments({
       user: user._id,
-    });
+    }).session(session);
 
     if (user.referredBy && userSubscriptionsCount === 1) {
-      // Yeh pehla subscription hai, inaam dene ka samay hai!
+      console.log(`Processing referral reward for user ${user.phone_no}...`);
       const referrer = await Usermodel.findOne({
         referralCode: user.referredBy,
-      });
+      }).session(session);
 
       if (referrer) {
-        const rewardAmount = 50; // ₹50 ka inaam
+        const rewardAmount = 50; // Your reward amount
 
-        // Naye user (Priya) ko inaam dein
-        const userWallet = await WalletModel.findOne({
-          phone_no: user.phone_no,
-        });
-        userWallet.balance += rewardAmount;
-        await userWallet.save();
-        // Transaction record banayein...
+        // Reward the new user
+        await WalletModel.findOneAndUpdate(
+          { phone_no: user.phone_no },
+          { $inc: { balance: rewardAmount } },
+          { session }
+        );
+        await TransactionModel.create(
+          [
+            {
+              walletId: wallet._id,
+              amount: rewardAmount,
+              type: "credit",
+              status: "successful",
+              description: "Referral bonus",
+            },
+          ],
+          { session }
+        );
 
-        // Purane user (Rohan) ko inaam dein
-        const referrerWallet = await WalletModel.findOne({
-          phone_no: referrer.phone_no,
-        });
-        referrerWallet.balance += rewardAmount;
-        await referrerWallet.save();
-        // Transaction record banayein...
+        // Reward the referrer
+        await WalletModel.findOneAndUpdate(
+          { phone_no: referrer.phone_no },
+          { $inc: { balance: rewardAmount } },
+          { session }
+        );
 
-        // referredBy field ko null kar dein taaki dobara inaam na mile
+        // Important: Remove the code so it can't be used again for rewards
         user.referredBy = null;
-        await user.save();
+        await user.save({ session });
+        console.log("Referral reward processed successfully.");
       }
     }
 
-    res.status(201).json({
+    // If all steps above are successful, commit the transaction
+    await session.commitTransaction();
+
+    // Finally, send the success response
+    res.status(201).send({
       success: true,
-      message: "Subscription created and first delivery scheduled.",
+      message: "Subscription created successfully!",
       subscription: newSubscription,
     });
   } catch (error) {
+    // If any error occurs at any step, abort the entire transaction
     await session.abortTransaction();
-    session.endSession();
-    console.error("Error in createSubscriptionController:", error);
+
+    console.error("CREATE SUBSCRIPTION FAILED:", error);
     res.status(500).send({
       success: false,
-      message: "Error creating subscription",
-      error: error.message,
+      message: error.message || "Failed to create subscription.",
     });
+  } finally {
+    // End the session in both success and failure cases
+    session.endSession();
   }
 };
 

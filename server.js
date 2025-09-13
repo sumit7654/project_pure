@@ -181,7 +181,7 @@ cron.schedule(
 );
 // CRON JOB 1: Har din subah 1 baje wallet se paise kaatne ke liye
 cron.schedule(
-  "0 1 * * *",
+  "2 1 * * *",
   async () => {
     console.log("Running daily deduction cron job...");
     const today = new Date();

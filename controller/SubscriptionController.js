@@ -3,6 +3,8 @@ import SubscriptionModel from "../model/SubscriptionModel.js";
 import { performDeduction } from "../services/deductionService.js";
 import DeliveryModel from "../model/DeliveryModel.js";
 import Walletmodel from "../model/Walletmodel.js";
+import Usermodel from "../model/Usermodel.js";
+import TransactionModel from "../model/TransactionModel.js";
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
   // Start a new database session for the transaction
@@ -22,7 +24,7 @@ export const createSubscriptionController = async (req, res) => {
     if (!user) {
       throw new Error("User not found.");
     }
-    const wallet = await WalletModel.findOne({
+    const wallet = await Walletmodel.findOne({
       phone_no: user.phone_no,
     }).session(session);
     if (!wallet) {
@@ -99,7 +101,7 @@ export const createSubscriptionController = async (req, res) => {
         const rewardAmount = 50; // Your reward amount
 
         // Reward the new user
-        await WalletModel.findOneAndUpdate(
+        await Walletmodel.findOneAndUpdate(
           { phone_no: user.phone_no },
           { $inc: { balance: rewardAmount } },
           { session }
@@ -118,7 +120,7 @@ export const createSubscriptionController = async (req, res) => {
         );
 
         // Reward the referrer
-        await WalletModel.findOneAndUpdate(
+        await Walletmodel.findOneAndUpdate(
           { phone_no: referrer.phone_no },
           { $inc: { balance: rewardAmount } },
           { session }

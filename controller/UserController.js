@@ -365,3 +365,35 @@ export const applyReferralCodeController = async (req, res) => {
     });
   }
 };
+
+// controller/UserController.js
+
+export const getDashboardStatsController = async (req, res) => {
+  try {
+    // We need to import these models at the top of the file if they aren't already
+    // import SubscriptionModel from "./../model/SubscriptionModel.js";
+    // import Usermodel from "./../model/Usermodel.js";
+
+    const [totalSubscriptions, totalUsers, deliveryStaff] = await Promise.all([
+      SubscriptionModel.countDocuments(),
+      Usermodel.countDocuments({ role: "customer" }),
+      Usermodel.countDocuments({ role: "deliveryBoy" }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalOrders: totalSubscriptions,
+        totalUsers,
+        deliveryStaff,
+      },
+    });
+  } catch (error) {
+    console.error("DASHBOARD STATS ERROR:", error);
+    res.status(500).send({
+      success: false,
+      message: "Error fetching dashboard stats",
+      error: error.message,
+    });
+  }
+};

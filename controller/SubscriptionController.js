@@ -44,6 +44,44 @@ export const createSubscriptionController = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
+    // ✅ NAYA LOGIC: INAAM DENE KE LIYE
+    const user = await Usermodel.findById(req.user.id); // Maan rahe hain ki user ID request me hai
+
+    // Check karein ki kya yeh user ka pehla subscription hai aur usne code use kiya hai
+    const userSubscriptionsCount = await SubscriptionModel.countDocuments({
+      user: user._id,
+    });
+
+    if (user.referredBy && userSubscriptionsCount === 1) {
+      // Yeh pehla subscription hai, inaam dene ka samay hai!
+      const referrer = await Usermodel.findOne({
+        referralCode: user.referredBy,
+      });
+
+      if (referrer) {
+        const rewardAmount = 50; // ₹50 ka inaam
+
+        // Naye user (Priya) ko inaam dein
+        const userWallet = await WalletModel.findOne({
+          phone_no: user.phone_no,
+        });
+        userWallet.balance += rewardAmount;
+        await userWallet.save();
+        // Transaction record banayein...
+
+        // Purane user (Rohan) ko inaam dein
+        const referrerWallet = await WalletModel.findOne({
+          phone_no: referrer.phone_no,
+        });
+        referrerWallet.balance += rewardAmount;
+        await referrerWallet.save();
+        // Transaction record banayein...
+
+        // referredBy field ko null kar dein taaki dobara inaam na mile
+        user.referredBy = null;
+        await user.save();
+      }
+    }
 
     res.status(201).json({
       success: true,

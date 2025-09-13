@@ -26,11 +26,16 @@ export const Registercontroller = async (req, res) => {
         .status(400)
         .send({ success: false, message: "User already registered" });
     }
+    const baseName = name.substring(0, 4).toUpperCase();
+    const randomDigits = crypto.randomInt(100, 999);
+    const referralCode = `${baseName}${randomDigits}`;
+
     const user = await Usermodel.create({
       name,
       phone_no,
       password,
       role: "customer",
+      referralCode: referralCode,
     });
     res.status(201).send({
       success: true,
@@ -77,6 +82,8 @@ export const Logincontroller = async (req, res) => {
         phone_no: user.phone_no,
         role: user.role,
         address: user.address,
+        referralCode: user.referralCode, // Yeh pehle se hoga
+        referredBy: user.referredBy,
       },
     });
   } catch (error) {
@@ -156,6 +163,11 @@ export const registerStaffController = async (req, res) => {
         .send({ message: "User with this phone number already exists" });
     }
 
+    // ✅ NAYA LOGIC: REFERRAL CODE BANANE KE LIYE
+    // Ek simple code: Naam ke shuruaati 4 अक्षर + 3 random अंक
+    const baseName = name.substring(0, 4).toUpperCase();
+    const randomDigits = crypto.randomInt(100, 999);
+    const referralCode = `${baseName}${randomDigits}`;
     // Naya user banate samay 'assignedPincodes' ko bhi save karein
     const user = await Usermodel.create({
       name,
@@ -310,5 +322,41 @@ export const getUnassignedDeliveriesController = async (req, res) => {
       message: "Error fetching unassigned deliveries",
       error,
     });
+  }
+};
+
+export const applyReferralCodeController = async (req, res) => {
+  try {
+    const { userId } = req.params; // Logged-in user ki ID
+    const { referralCode } = req.body;
+
+    if (!referralCode) {
+      return res.status(400).send({ message: "Referral code is required." });
+    }
+
+    // 1. Refer karne wale user ko dhoondhein
+    const referrer = await Usermodel.findOne({ referralCode });
+    if (!referrer) {
+      return res.status(404).send({ message: "Invalid referral code." });
+    }
+
+    // 2. Naye user ko update karein
+    const user = await Usermodel.findById(userId);
+    if (user.referredBy) {
+      return res
+        .status(400)
+        .send({ message: "Referral code already applied." });
+    }
+
+    user.referredBy = referralCode;
+    await user.save();
+
+    res
+      .status(200)
+      .send({ success: true, message: "Referral code applied successfully!" });
+  } catch (error) {
+    res
+      .status(500)
+      .send({ success: false, message: "Error applying code.", error });
   }
 };

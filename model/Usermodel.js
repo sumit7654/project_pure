@@ -40,6 +40,14 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true, // Yeh 'null' values ko unique constraint se ignore karta hai
+    },
+    referredBy: {
+      type: String, // Yahan us user ka referral code store hoga jisne refer kiya
+    },
     // +++ Yahaan Address ka poora structure hai +++
     address: {
       houseNumber: String,

@@ -2,7 +2,8 @@ import express from "express";
 import {
   Registercontroller,
   Logincontroller,
-  UpdateLocationController, // Naya controller import karein
+  UpdateLocationController,
+  applyReferralCodeController, // Naya controller import karein
 } from "../controller/UserController.js";
 
 const router = express.Router();
@@ -10,6 +11,7 @@ const router = express.Router();
 // Purane routes
 router.post("/registeruser", Registercontroller);
 router.post("/loginuser", Logincontroller);
+router.post("/apply-referral/:userId", applyReferralCodeController);
 
 // +++ Naya Route: Location save aur update karne ke liye +++
 // Ye route 'PUT' method ka istemal karta hai, jo update ke liye standard hai.

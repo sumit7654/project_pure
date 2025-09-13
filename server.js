@@ -74,7 +74,7 @@ app.post("/create-order", async (req, res) => {
 // ==============================================================================
 // Ye job har raat 11:59 PM par chalega
 cron.schedule(
-  "59 23 * * *",
+  "58 23 * * *",
   async () => {
     console.log("Running daily job to handle undelivered one-time orders...");
     try {
@@ -143,7 +143,7 @@ cron.schedule(
 );
 // CRON JOB 1: Har din subah 1 baje naye deliveries banayein
 cron.schedule(
-  "0 1 * * *",
+  "59 23 * * *",
   async () => {
     console.log("Running daily job to create deliveries...");
     const today = new Date();

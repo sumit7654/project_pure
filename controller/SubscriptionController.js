@@ -42,11 +42,11 @@ const processReferralReward = async (newUserId, session) => {
         `Chetaavni: Referrer ${referrer._id} ke paas walletId nahi tha. Abhi banaya ja raha hai...`
       );
 
-      const newWallet = new WalletModel({
-        phone_no: referrer.phone_no,
-        balance: referrer.walletBalance || 0,
-      });
-      const savedWallet = await newWallet.save({ session });
+      // const newWallet = new WalletModel({
+      //   phone_no: referrer.phone_no,
+      //   balance: referrer.walletBalance || 0,
+      // });
+      // const savedWallet = await newWallet.save({ session });
       let existingWallet;
       // ✅ SUDHAR YAHAN HAI: Pehle dhoondo, fir banao
       // Step 1: Check karo ki kya wallet pehle se hai
@@ -69,11 +69,11 @@ const processReferralReward = async (newUserId, session) => {
       }
       await Usermodel.findByIdAndUpdate(
         referrer._id,
-        { $set: { walletId: savedWallet._id } },
+        { $set: { walletId: existingWallet._id } },
         { session }
       );
 
-      referrer.walletId = savedWallet._id;
+      referrer.walletId = existingWallet._id;
 
       console.log(`Safalta: Naya wallet ban gaya aur user se link ho gaya.`);
     }

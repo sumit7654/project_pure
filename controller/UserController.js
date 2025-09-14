@@ -401,7 +401,7 @@ export const getDashboardStatsController = async (req, res) => {
     // import Usermodel from "./../model/Usermodel.js";
 
     const [totalSubscriptions, totalUsers, deliveryStaff] = await Promise.all([
-      SubscriptionModel.countDocuments(),
+      SubscriptionModel.countDocuments({ is_active: true }),
       Usermodel.countDocuments({ role: "customer" }),
       Usermodel.countDocuments({ role: "deliveryBoy" }),
     ]);

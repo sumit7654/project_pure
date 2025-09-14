@@ -4,6 +4,7 @@ import { performDeduction } from "../services/deductionService.js";
 import DeliveryModel from "../model/DeliveryModel.js";
 import Usermodel from "../model/Usermodel.js"; // <-- ✅ Ise jodein
 import TransactionModel from "../model/TransactionModel.js";
+import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 
 // =================================================================================
 // =================== REFERRAL REWARD LOGIC (HELPER FUNCTION) =====================

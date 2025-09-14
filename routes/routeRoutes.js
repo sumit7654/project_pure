@@ -1,7 +1,7 @@
 // routes/routeRoutes.js
 import express from "express";
 import { getDeliveryLocationsController } from "../controller/RouteController.js";
-import { getOptimizedRouteController } from "../controller/RouteController.js";
+// import { getOptimizedRouteController } from "../controller/RouteController.js";
 
 const router = express.Router();
 
@@ -10,6 +10,6 @@ router.get(
   "/delivery-locations/:deliveryBoyId",
   getDeliveryLocationsController
 );
-router.get("/delivery-route/:userId", getOptimizedRouteController);
+// router.get("/delivery-route/:userId", getOptimizedRouteController);
 
 export default router;

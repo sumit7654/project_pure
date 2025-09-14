@@ -43,7 +43,7 @@ const processReferralReward = async (newUserId, session) => {
       );
 
       const newWallet = new WalletModel({
-        user: referrer._id,
+        phone_no: referrer.phone_no,
         balance: referrer.walletBalance || 0,
       });
       const savedWallet = await newWallet.save({ session });

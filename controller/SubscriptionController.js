@@ -21,7 +21,6 @@ const processReferralReward = async (newUserId, session) => {
     }
 
     const newUser = await Usermodel.findById(newUserId).session(session);
-
     if (!newUser || !newUser.referredBy) {
       console.log(`User ${newUserId} ne koi referral code use nahi kiya.`);
       return;
@@ -35,18 +34,42 @@ const processReferralReward = async (newUserId, session) => {
       return;
     }
 
-    const REFERRAL_BONUS = 50; // Aap reward amount yahaan set karein
+    // +++ ✅ SELF-HEALING LOGIC YAHAN HAI +++
+    // Check karein ki referrer ke paas walletId hai ya nahi
+    if (!referrer.walletId) {
+      console.warn(
+        `Chetaavni: Referrer ${referrer._id} ke paas walletId nahi tha. Abhi banaya ja raha hai...`
+      );
 
+      const newWallet = new WalletModel({
+        user: referrer._id,
+        balance: referrer.walletBalance || 0,
+      });
+      const savedWallet = await newWallet.save({ session });
+
+      await Usermodel.findByIdAndUpdate(
+        referrer._id,
+        { $set: { walletId: savedWallet._id } },
+        { session }
+      );
+
+      referrer.walletId = savedWallet._id;
+
+      console.log(`Safalta: Naya wallet ban gaya aur user se link ho gaya.`);
+    }
+    // +++ SELF-HEALING LOGIC KHATM +++
+
+    const REFERRAL_BONUS = 50;
     await Usermodel.findByIdAndUpdate(
       referrer._id,
       { $inc: { walletBalance: REFERRAL_BONUS } },
-      { session } // Transaction ke liye session pass karein
+      { session }
     );
 
     await TransactionModel.create(
       [
         {
-          walletId: referrer.walletId,
+          walletId: referrer.walletId, // Ab yeh hamesha milega
           amount: REFERRAL_BONUS,
           type: "credit",
           status: "successful",
@@ -61,7 +84,6 @@ const processReferralReward = async (newUserId, session) => {
     );
   } catch (error) {
     console.error("❌ REFERRAL REWARD DENE MEIN ERROR:", error);
-    // Yahan ek error throw karein taaki transaction fail ho jaaye
     throw new Error("Could not process referral reward.");
   }
 };

@@ -3,54 +3,74 @@ import Usermodel from "./../model/Usermodel.js";
 import DeliveryModel from "./../model/DeliveryModel.js";
 import crypto from "crypto";
 import SubscriptionModel from "./../model/SubscriptionModel.js";
+import WalletModel from "./../model/WalletModel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 // import Usermodel from "./../model/Usermodel.js";
 
 // ##############################################################################
 // ################################ CUSTOMER SECTION ####################################
 // ##############################################################################
 
+// +++ ✅ YEH NAYA AUR SAHI REGISTER CONTROLLER HAI +++
 export const Registercontroller = async (req, res) => {
-  const { name, phone_no, password, confirmpassword } = req.body;
-  if (!name || !phone_no || !password || !confirmpassword) {
-    return res
-      .status(400)
-      .send({ success: false, message: "All fields are required" });
-  }
-  if (password !== confirmpassword) {
-    return res
-      .status(400)
-      .send({ success: false, message: "Passwords do not match" });
-  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const exitinguser = await Usermodel.findOne({ phone_no });
-    if (exitinguser) {
-      return res
-        .status(400)
-        .send({ success: false, message: "User already registered" });
+    const { name, phone_no, password, confirmpassword } = req.body;
+
+    if (!name || !phone_no || !password || !confirmpassword) {
+      throw new Error("All fields are required");
     }
+    if (password !== confirmpassword) {
+      throw new Error("Passwords do not match");
+    }
+
+    const existingUser = await Usermodel.findOne({ phone_no }).session(session);
+    if (existingUser) {
+      throw new Error("User already registered");
+    }
+
+    // 1. User ke liye ek naya Wallet banayein
+    const newWallet = new WalletModel({ balance: 0 });
+    const savedWallet = await newWallet.save({ session });
+
+    // 2. User ka data taiyaar karein
     const baseName = name.substring(0, 4).toUpperCase();
     const randomDigits = crypto.randomInt(100, 999);
     const referralCode = `${baseName}${randomDigits}`;
 
-    const user = await Usermodel.create({
+    const user = new Usermodel({
       name,
       phone_no,
       password,
       role: "customer",
       referralCode: referralCode,
+      walletId: savedWallet._id, // <-- ✅ Naye wallet ki ID ko yahan jodein
     });
+
+    // 3. User ko save karne se pehle Wallet mein user ki ID update karein
+    savedWallet.user = user._id;
+    await savedWallet.save({ session });
+
+    await user.save({ session });
+
+    await session.commitTransaction();
+
     res.status(201).send({
       success: true,
       message: "Successfully Registered",
       user: { _id: user._id, name: user.name, phone_no: user.phone_no },
     });
   } catch (error) {
+    // Koi bhi galti hone par transaction ko reverse kar dein
+    await session.abortTransaction();
     console.error("CUSTOMER REGISTRATION ERROR:", error);
-    res.status(500).send({
+    res.status(400).send({
+      // Use 400 for client errors like "User already exists"
       success: false,
-      message: "Error in registration",
-      error: error.message,
+      message: error.message || "Error in registration",
     });
+  } finally {
+    session.endSession();
   }
 };
 

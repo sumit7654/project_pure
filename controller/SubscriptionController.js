@@ -46,13 +46,14 @@ const processReferralReward = async (newUserId, session) => {
     await TransactionModel.create(
       [
         {
-          user: referrer._id,
+          walletId: referrer.walletId,
           amount: REFERRAL_BONUS,
           type: "credit",
+          status: "successful",
           description: `Referral bonus for inviting ${newUser.name}`,
         },
       ],
-      { session } // Transaction ke liye session pass karein
+      { session }
     );
 
     console.log(

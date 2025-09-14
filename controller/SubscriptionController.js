@@ -61,9 +61,9 @@ const processReferralReward = async (newUserId, session) => {
     // +++ SELF-HEALING LOGIC KHATM +++
 
     const REFERRAL_BONUS = 50;
-    await Usermodel.findByIdAndUpdate(
-      referrer._id,
-      { $inc: { walletBalance: REFERRAL_BONUS } },
+    await WalletModel.findByIdAndUpdate(
+      referrer.walletId,
+      { $inc: { balance: REFERRAL_BONUS } },
       { session }
     );
 

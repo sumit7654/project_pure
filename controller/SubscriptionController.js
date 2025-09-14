@@ -47,7 +47,26 @@ const processReferralReward = async (newUserId, session) => {
         balance: referrer.walletBalance || 0,
       });
       const savedWallet = await newWallet.save({ session });
+      let existingWallet;
+      // ✅ SUDHAR YAHAN HAI: Pehle dhoondo, fir banao
+      // Step 1: Check karo ki kya wallet pehle se hai
+      existingWallet = await WalletModel.findOne({
+        phone_no: referrer.phone_no,
+      }).session(session);
 
+      // Step 2: Agar wallet nahi mila, tabhi naya banao
+      if (!existingWallet) {
+        console.log(
+          `Wallet nahi mila. Referrer ke liye naya wallet banaya ja raha hai...`
+        );
+        const newWallet = new WalletModel({
+          phone_no: referrer.phone_no,
+          balance: 0,
+        });
+        existingWallet = await newWallet.save({ session });
+      } else {
+        console.log(`Purana wallet mil gaya. User se link kiya ja raha hai...`);
+      }
       await Usermodel.findByIdAndUpdate(
         referrer._id,
         { $set: { walletId: savedWallet._id } },
@@ -58,6 +77,7 @@ const processReferralReward = async (newUserId, session) => {
 
       console.log(`Safalta: Naya wallet ban gaya aur user se link ho gaya.`);
     }
+
     // +++ SELF-HEALING LOGIC KHATM +++
 
     const REFERRAL_BONUS = 50;

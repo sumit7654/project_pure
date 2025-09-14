@@ -3,7 +3,7 @@ import Usermodel from "./../model/Usermodel.js";
 import DeliveryModel from "./../model/DeliveryModel.js";
 import crypto from "crypto";
 import SubscriptionModel from "./../model/SubscriptionModel.js";
-import WalletModel from "./../model/WalletModel.js"; // <-- ✅ YAHAN IMPORT KAREIN
+import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 // import Usermodel from "./../model/Usermodel.js";
 
 // ##############################################################################

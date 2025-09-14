@@ -30,7 +30,10 @@ export const Registercontroller = async (req, res) => {
     }
 
     // 1. User ke liye ek naya Wallet banayein
-    const newWallet = new WalletModel({ balance: 0 });
+    const newWallet = new WalletModel({
+      phone_no: phone_no,
+      balance: 0,
+    });
     const savedWallet = await newWallet.save({ session });
 
     // 2. User ka data taiyaar karein

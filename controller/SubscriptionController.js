@@ -2,6 +2,68 @@ import mongoose from "mongoose";
 import SubscriptionModel from "../model/SubscriptionModel.js";
 import { performDeduction } from "../services/deductionService.js";
 import DeliveryModel from "../model/DeliveryModel.js";
+import Usermodel from "../model/Usermodel.js"; // <-- ✅ Ise jodein
+import TransactionModel from "../model/TransactionModel.js";
+
+// =================================================================================
+// =================== REFERRAL REWARD LOGIC (HELPER FUNCTION) =====================
+// =================================================================================
+const processReferralReward = async (newUserId, session) => {
+  try {
+    const userOrderCount = await SubscriptionModel.countDocuments({
+      user: newUserId,
+    }).session(session);
+    if (userOrderCount > 1) {
+      console.log(
+        `User ${newUserId} ka pehla order nahi hai. Koi reward nahi.`
+      );
+      return;
+    }
+
+    const newUser = await Usermodel.findById(newUserId).session(session);
+
+    if (!newUser || !newUser.referredBy) {
+      console.log(`User ${newUserId} ne koi referral code use nahi kiya.`);
+      return;
+    }
+
+    const referrer = await Usermodel.findOne({
+      referralCode: newUser.referredBy,
+    }).session(session);
+    if (!referrer) {
+      console.log(`Referrer jiska code ${newUser.referredBy} hai, nahi mila.`);
+      return;
+    }
+
+    const REFERRAL_BONUS = 50; // Aap reward amount yahaan set karein
+
+    await Usermodel.findByIdAndUpdate(
+      referrer._id,
+      { $inc: { walletBalance: REFERRAL_BONUS } },
+      { session } // Transaction ke liye session pass karein
+    );
+
+    await TransactionModel.create(
+      [
+        {
+          user: referrer._id,
+          amount: REFERRAL_BONUS,
+          type: "credit",
+          description: `Referral bonus for inviting ${newUser.name}`,
+        },
+      ],
+      { session } // Transaction ke liye session pass karein
+    );
+
+    console.log(
+      `✅ SAFALTA: ${referrer.name} ko ${REFERRAL_BONUS} ka referral bonus mil gaya!`
+    );
+  } catch (error) {
+    console.error("❌ REFERRAL REWARD DENE MEIN ERROR:", error);
+    // Yahan ek error throw karein taaki transaction fail ho jaaye
+    throw new Error("Could not process referral reward.");
+  }
+};
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
   const session = await mongoose.startSession();
@@ -42,6 +104,8 @@ export const createSubscriptionController = async (req, res) => {
       { session }
     );
 
+    // Yeh transaction ke commit hone se theek pehle hoga
+    await processReferralReward(userId, session);
     await session.commitTransaction();
     session.endSession();
 

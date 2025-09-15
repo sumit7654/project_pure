@@ -291,7 +291,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
     })
       .populate({
         path: "user",
-        select: "name address",
+        select: "name address phone_no",
         match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
       })
       .populate("subscription", "plan");

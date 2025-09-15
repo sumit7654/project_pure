@@ -69,6 +69,11 @@ app.post("/create-order", async (req, res) => {
   }
 });
 
+// ✅ ADD THIS HEALTH CHECK ROUTE
+app.get("/", (req, res) => {
+  res.send("Server is healthy and running!");
+});
+
 // ==============================================================================
 // ================================ CRON JOBS ===================================
 // ==============================================================================
@@ -143,7 +148,7 @@ cron.schedule(
 );
 // CRON JOB 1: Har din subah 1 baje naye deliveries banayein
 cron.schedule(
-  "01 00 * * *",
+  "0 1 * * *",
   async () => {
     console.log("Running daily job to create deliveries...");
     const today = new Date();

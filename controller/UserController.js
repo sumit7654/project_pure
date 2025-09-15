@@ -257,6 +257,7 @@ export const loginStaffController = async (req, res) => {
         address: user.address, // ✅ Send address for staff too
         referralCode: user.referralCode, // ✅ THE FIX WAS MISSING HERE
         referredBy: user.referredBy, // ✅ THE FIX WAS MISSING HERE
+        assignedPincodes: user.assignedPincodes, // ✅ ADD THIS LINE
       },
     });
   } catch (error) {

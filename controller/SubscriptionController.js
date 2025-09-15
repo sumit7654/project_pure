@@ -101,10 +101,10 @@ const processReferralReward = async (newUserId, session) => {
     );
 
     console.log(
-      `✅ SAFALTA: ${referrer.name} ko ${REFERRAL_BONUS} ka referral bonus mil gaya!`
+      `✅success: ${referrer.name} get ${REFERRAL_BONUS} for referal bonus`
     );
   } catch (error) {
-    console.error("❌ REFERRAL REWARD DENE MEIN ERROR:", error);
+    console.error("There is error in sending referal award:", error);
     throw new Error("Could not process referral reward.");
   }
 };
@@ -121,7 +121,7 @@ export const createSubscriptionController = async (req, res) => {
 
     const start = new Date(startDate);
     const end = new Date(start);
-    end.setDate(start.getDate() + plan.duration_days);
+    end.setDate(start.getDate() + plan.duration_days - 1);
 
     const newSubscription = new SubscriptionModel({
       user: userId,

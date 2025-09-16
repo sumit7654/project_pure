@@ -16,6 +16,7 @@ import deliveryRoutes from "./routes/deliveryRoutes.js"; // Naya route import ka
 import pincodeRoutes from "./routes/pincodeRoutes.js"; // 💡 Naya route import karein
 import routeRoutes from "./routes/routeRoutes.js"; // 💡 Naya route import karein
 import productRoutes from "./routes/ProductRoutes.js"; // Import the new route
+import categoryRoutes from "./routes/CategoryRoutes.js"; // ✅ 1. Import the new router
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
 import WalletModel from "./model/Walletmodel.js";
@@ -48,6 +49,7 @@ app.use("/api/routes", routeRoutes); // 💡 Naya route jodein
 app.use("/api/pincodes", pincodeRoutes); // 💡 Naya route jodein
 app.use("/api/deliveries", deliveryRoutes); // 💡 Naya route jodein
 app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes); // ✅ 2. Add this line
 app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;

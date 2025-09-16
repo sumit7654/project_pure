@@ -4,6 +4,7 @@ import DeliveryModel from "./../model/DeliveryModel.js";
 import crypto from "crypto";
 import SubscriptionModel from "./../model/SubscriptionModel.js";
 import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
+import { sendPushNotification } from "./../services/notificationService.js";
 // import Usermodel from "./../model/Usermodel.js";
 
 // ##############################################################################
@@ -422,5 +423,67 @@ export const getDashboardStatsController = async (req, res) => {
       message: "Error fetching dashboard stats",
       error: error.message,
     });
+  }
+};
+
+// Add this new controller function to the file
+export const broadcastNotificationController = async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    if (!title || !message) {
+      return res
+        .status(400)
+        .send({ message: "Title and message are required." });
+    }
+
+    // 1. Find all users who have at least one push token
+    const usersWithTokens = await Usermodel.find({
+      expoPushTokens: { $exists: true, $not: { $size: 0 } },
+    });
+
+    if (usersWithTokens.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No users with push tokens found." });
+    }
+
+    // 2. Collect all tokens into a single list
+    const allTokens = usersWithTokens.flatMap((user) => user.expoPushTokens);
+
+    // 3. Send the notification to all tokens
+    await sendPushNotification(allTokens, title, message);
+
+    res.status(200).send({
+      success: true,
+      message: `Notification sent to ${allTokens.length} users.`,
+    });
+  } catch (error) {
+    console.error("BROADCAST NOTIFICATION ERROR:", error);
+    res.status(500).send({
+      message: "Error sending broadcast notification.",
+      error: error.message,
+    });
+  }
+};
+
+// Add this new controller to UserController.js
+
+export const savePushTokenController = async (req, res) => {
+  const { userId, token } = req.body;
+  try {
+    const user = await Usermodel.findById(userId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    if (token && !user.expoPushTokens.includes(token)) {
+      user.expoPushTokens.push(token);
+      await user.save();
+    }
+
+    res.status(200).send({ success: true, message: "Token saved" });
+  } catch (error) {
+    console.error("Save Push Token Error:", error);
+    res.status(500).send({ success: false, message: "Server error" });
   }
 };

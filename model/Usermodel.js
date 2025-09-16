@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema(
     referredBy: {
       type: String, // Yahan us user ka referral code store hoga jisne refer kiya
     },
+    expoPushTokens: {
+      type: [String],
+      default: [],
+    },
     // +++ Yahaan Address ka poora structure hai +++
     address: {
       houseNumber: String,

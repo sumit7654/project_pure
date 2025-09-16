@@ -4,7 +4,7 @@ import ProductModel from "../model/ProductModel.js";
 export const getProductsController = async (req, res) => {
   try {
     // Find the single large document in the collection
-    const products = await ProductModel.findOne({});
+    const products = await ProductModel.find({});
 
     if (!products || products.length === 0) {
       return res.status(404).json({

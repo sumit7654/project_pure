@@ -5,6 +5,7 @@ import crypto from "crypto";
 import SubscriptionModel from "./../model/SubscriptionModel.js";
 import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 import { sendPushNotification } from "./../services/notificationService.js";
+import Walletmodel from "./../model/Walletmodel.js";
 // import Usermodel from "./../model/Usermodel.js";
 
 // ##############################################################################
@@ -64,6 +65,17 @@ export const Registercontroller = async (req, res) => {
       message: "Successfully Registered",
       user: { _id: user._id, name: user.name, phone_no: user.phone_no },
     });
+    const welcomeBonus = 50;
+    const walletArr = await Walletmodel.create(
+      [
+        {
+          user: user._id,
+          phone_no: user.phone_no,
+          balance: welcomeBonus,
+        },
+      ],
+      { session }
+    );
   } catch (error) {
     // Koi bhi galti hone par transaction ko reverse kar dein
     await session.abortTransaction();

@@ -5,6 +5,7 @@ export const getProductsController = async (req, res) => {
   try {
     // Find the single large document in the collection
     const products = await ProductModel.find({});
+    console.log("this is from productcontroller", products);
 
     if (!products || products.length === 0) {
       return res.status(404).json({

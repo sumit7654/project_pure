@@ -230,7 +230,7 @@ cron.schedule(
 // 💡 FIX: Expired subscriptions ke liye ALAG cron job
 // Ye job har din subah 1:05 baje chalega
 cron.schedule(
-  "25 1 * * *",
+  "0 23 * * *",
   async () => {
     console.log("Running daily job to deactivate expired subscriptions...");
     try {

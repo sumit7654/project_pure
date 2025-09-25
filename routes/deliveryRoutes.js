@@ -11,6 +11,6 @@ const router = express.Router();
 // Ek specific delivery ko 'Delivered' mark karne ke liye
 // PUT /api/deliveries/:deliveryId/complete
 router.put("/:deliveryId/complete", markAsDeliveredController);
-router.get("/all", getTodaysDeliveriesForAdminController);
+router.get("/today", getTodaysDeliveriesForAdminController);
 
 export default router;

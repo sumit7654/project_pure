@@ -146,15 +146,14 @@ cron.schedule(
   },
   { timezone: "Asia/Kolkata" }
 );
-// CRON JOB 1: Har din subah 1 baje naye deliveries banayein
+// CRON JOB 1: Har din subah 12 baje naye deliveries banayein
 cron.schedule(
   "15 0 * * *",
   async () => {
     console.log("Running daily job to create deliveries...");
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayString = today.toISOString().split("T")[0];
-
+    const todayString = getTodayInKolkataString(); // ✅ USE THE NEW FUNCTION
     const activeSubscriptions = await SubscriptionModel.find({
       is_active: true,
       validity_end_date: { $gte: today },
@@ -229,7 +228,7 @@ cron.schedule(
 // 💡 FIX: Expired subscriptions ke liye ALAG cron job
 // Ye job har din subah 1:05 baje chalega
 cron.schedule(
-  "0 23 * * *",
+  "5 1 * * *",
   async () => {
     console.log("Running daily job to deactivate expired subscriptions...");
     try {

@@ -5,7 +5,7 @@ import connectDB from "./config/connectDB.js";
 import cors from "cors";
 import cron from "node-cron";
 import Razorpay from "razorpay";
-
+import { getTodayInKolkataString } from "./utils/dateHelper.js"; // ✅ Import the new helper
 // Route Imports
 import Userroutes from "./routes/Userroutes.js";
 import Walletroute from "./routes/Walletroute.js";
@@ -199,6 +199,7 @@ cron.schedule(
       });
 
       for (const sub of activeSubscriptions) {
+        const todayString = getTodayInKolkataString(); // ✅ Use timezone-safe date
         const lastDeduction = sub.last_deduction_date
           ? new Date(sub.last_deduction_date)
           : null;
@@ -206,8 +207,6 @@ cron.schedule(
           console.log(`Skipping ${sub.phone_no}: Already deducted today.`);
           continue;
         }
-
-        const todayString = today.toISOString().split("T")[0];
         const pausedDateStrings = sub.paused_dates.map(
           (d) => new Date(d).toISOString().split("T")[0]
         );

@@ -6,6 +6,7 @@ import SubscriptionModel from "./../model/SubscriptionModel.js";
 import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 // import { sendPushNotification } from "./../services/notificationService.js";
 import Walletmodel from "./../model/Walletmodel.js";
+import { getTodayInKolkataString } from "../utils/dateHelper.js";
 // import Usermodel from "./../model/Usermodel.js";
 
 // ##############################################################################
@@ -287,8 +288,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
       return res.status(200).json({ success: true, deliveries: [] });
     }
 
-    const todayString = new Date().toISOString().split("T")[0];
-
+    const todayString = getTodayInKolkataString(); // ✅ USE THE NEW FUNCTION
     const todaysDeliveries = await DeliveryModel.find({
       delivery_date: todayString,
       status: "Pending",

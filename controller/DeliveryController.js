@@ -2,6 +2,49 @@
 import mongoose from "mongoose";
 import DeliveryModel from "../model/DeliveryModel.js";
 import SubscriptionModel from "../model/SubscriptionModel.js";
+import DeliveryModel from "../model/DeliveryModel.js";
+import { getTodayInKolkataString } from "../utils/dateHelper.js";
+
+export const getTodaysDeliveriesForAdminController = async (req, res) => {
+  try {
+    // 1. Apne timezone ke anusaar aaj ki sahi tarikh nikaalein
+    const todayString = getTodayInKolkataString();
+
+    // 2. Sirf aaj ki tarikh waale saare deliveries dhoondhein
+    const deliveries = await DeliveryModel.find({ delivery_date: todayString })
+      .populate({
+        path: "user", // Customer ki details laayein
+        select: "name phone_no", // Sirf naam aur phone number
+      })
+      .populate({
+        path: "subscription", // Subscription ki details laayein
+        select: "plan", // Sirf plan ki jaankari
+      })
+      .sort({ createdAt: -1 }); // Naye orders ko sabse upar dikhayein
+
+    if (!deliveries) {
+      return res
+        .status(404)
+        .send({
+          success: false,
+          message: "Aaj ke liye koi delivery nahi mili.",
+        });
+    }
+
+    // 3. Saare deliveries ki complete list bhej dein
+    res.status(200).send({
+      success: true,
+      count: deliveries.length,
+      deliveries,
+    });
+  } catch (error) {
+    console.error(
+      "Admin ke liye aaj ki deliveries fetch karne mein error:",
+      error
+    );
+    res.status(500).send({ success: false, message: "Server mein error hai." });
+  }
+};
 
 export const markAsDeliveredController = async (req, res) => {
   const session = await mongoose.startSession();

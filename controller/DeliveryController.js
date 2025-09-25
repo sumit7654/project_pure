@@ -2,7 +2,6 @@
 import mongoose from "mongoose";
 import DeliveryModel from "../model/DeliveryModel.js";
 import SubscriptionModel from "../model/SubscriptionModel.js";
-import DeliveryModel from "../model/DeliveryModel.js";
 import { getTodayInKolkataString } from "../utils/dateHelper.js";
 
 export const getTodaysDeliveriesForAdminController = async (req, res) => {
@@ -23,12 +22,10 @@ export const getTodaysDeliveriesForAdminController = async (req, res) => {
       .sort({ createdAt: -1 }); // Naye orders ko sabse upar dikhayein
 
     if (!deliveries) {
-      return res
-        .status(404)
-        .send({
-          success: false,
-          message: "Aaj ke liye koi delivery nahi mili.",
-        });
+      return res.status(404).send({
+        success: false,
+        message: "Aaj ke liye koi delivery nahi mili.",
+      });
     }
 
     // 3. Saare deliveries ki complete list bhej dein

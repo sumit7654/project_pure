@@ -1,7 +1,10 @@
 // routes/deliveryRoutes.js
 
 import express from "express";
-import { markAsDeliveredController } from "../controller/DeliveryController.js";
+import {
+  getTodaysDeliveriesForAdminController,
+  markAsDeliveredController,
+} from "../controller/DeliveryController.js";
 
 const router = express.Router();
 

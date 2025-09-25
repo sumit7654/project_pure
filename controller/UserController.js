@@ -444,6 +444,42 @@ export const getAllStaffController = async (req, res) => {
   }
 };
 
+// ✅ ADD THIS NEW FUNCTION
+export const updateStaffController = async (req, res) => {
+  try {
+    const { staffId } = req.params;
+    const { name, role, assignedPincodes, password } = req.body;
+
+    const user = await Usermodel.findById(staffId);
+    if (!user) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Staff member not found." });
+    }
+
+    // Update fields if they were provided
+    if (name) user.name = name;
+    if (role) user.role = role;
+    if (assignedPincodes) user.assignedPincodes = assignedPincodes;
+
+    // Only update password if a new one is sent
+    if (password) {
+      user.password = password;
+    }
+
+    await user.save();
+
+    res
+      .status(200)
+      .send({ success: true, message: "Staff details updated successfully!" });
+  } catch (error) {
+    console.error("UPDATE STAFF ERROR:", error);
+    res
+      .status(500)
+      .send({ success: false, message: "Error updating staff details." });
+  }
+};
+
 // Add this new controller function to the file
 // export const broadcastNotificationController = async (req, res) => {
 //   try {

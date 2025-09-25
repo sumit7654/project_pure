@@ -428,6 +428,22 @@ export const getDashboardStatsController = async (req, res) => {
   }
 };
 
+// ✅ ADD THIS NEW FUNCTION
+export const getAllStaffController = async (req, res) => {
+  try {
+    const staff = await Usermodel.find({
+      role: { $in: ["admin", "deliveryBoy"] },
+    }).select("-password"); // Don't send the password
+
+    res.status(200).send({ success: true, staff });
+  } catch (error) {
+    console.error("Error fetching staff list:", error);
+    res
+      .status(500)
+      .send({ success: false, message: "Error fetching staff list" });
+  }
+};
+
 // Add this new controller function to the file
 // export const broadcastNotificationController = async (req, res) => {
 //   try {

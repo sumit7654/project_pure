@@ -3,13 +3,15 @@ import {
   createSubscriptionController,
   getUserActiveSubscriptionsController,
   getAllUserSubscriptionsController,
-  updatePausedDatesController, // 💡 Naya, theek kiya hua controller
+  updatePausedDatesController,
+  getAllSubscriptionsController, // 💡 Naya, theek kiya hua controller
 } from "../controller/SubscriptionController.js";
 
 const router = express.Router();
 
 // Naya subscription banana
 router.post("/create", createSubscriptionController);
+router.get("/all", getAllSubscriptionsController);
 
 // User ke saare active subscriptions laana
 router.get("/user/:phone_no", getUserActiveSubscriptionsController);

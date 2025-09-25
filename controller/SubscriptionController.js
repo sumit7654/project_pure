@@ -271,3 +271,17 @@ export const getAllUserSubscriptionsController = async (req, res) => {
     });
   }
 };
+
+// ✅ ADD THIS NEW FUNCTION
+export const getAllSubscriptionsController = async (req, res) => {
+    try {
+        const subscriptions = await SubscriptionModel.find({})
+            .populate('user', 'name phone_no') // Get the customer's name and phone
+            .sort({ createdAt: -1 }); // Show the newest subscriptions first
+
+        res.status(200).send({ success: true, subscriptions });
+    } catch (error) {
+        console.error("Error fetching all subscriptions:", error);
+        res.status(500).send({ success: false, message: "Error fetching all subscriptions" });
+    }
+};

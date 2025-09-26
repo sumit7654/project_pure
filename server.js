@@ -88,7 +88,7 @@ app.get("/", (req, res) => {
 
 // This single, smart job runs every day at 1:05 AM IST
 cron.schedule(
-  "5 1 * * *",
+  "5 0 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {

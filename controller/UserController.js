@@ -429,13 +429,52 @@ export const getDashboardStatsController = async (req, res) => {
 };
 
 // ✅ ADD THIS NEW FUNCTION
+// export const getAllStaffController = async (req, res) => {
+//   try {
+//     const staff = await Usermodel.find({
+//       role: { $in: ["admin", "deliveryBoy"] },
+//     }).select("-password"); // Don't send the password
+
+//     res.status(200).send({ success: true, staff });
+//   } catch (error) {
+//     console.error("Error fetching staff list:", error);
+//     res
+//       .status(500)
+//       .send({ success: false, message: "Error fetching staff list" });
+//   }
+// };
+
+// ✅ YEH NAYA, UPDATED FUNCTION HAI
 export const getAllStaffController = async (req, res) => {
   try {
     const staff = await Usermodel.find({
       role: { $in: ["admin", "deliveryBoy"] },
-    }).select("-password"); // Don't send the password
+    }).lean(); // .lean() ka istemal performance behtar karta hai
 
-    res.status(200).send({ success: true, staff });
+    const todayString = getTodayInKolkataString();
+
+    // Promise.all ka istemal karke sabhi delivery boys ke liye ek saath order count nikaalein
+    const staffWithOrderCounts = await Promise.all(
+      staff.map(async (member) => {
+        if (member.role === "deliveryBoy") {
+          // Is delivery boy ke pincodes ke liye aaj ke pending orders ginein
+          const deliveries = await DeliveryModel.find({
+            delivery_date: todayString,
+            status: "Pending",
+          }).populate({
+            path: "user",
+            select: "address.pincode",
+            match: { "address.pincode": { $in: member.assignedPincodes } },
+          });
+
+          // Sirf un deliveries ko ginein jo is boy ke area mein hain
+          member.todaysOrderCount = deliveries.filter((d) => d.user).length;
+        }
+        return member;
+      })
+    );
+
+    res.status(200).send({ success: true, staff: staffWithOrderCounts });
   } catch (error) {
     console.error("Error fetching staff list:", error);
     res

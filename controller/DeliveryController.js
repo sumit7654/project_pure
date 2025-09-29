@@ -13,11 +13,14 @@ export const getTodaysDeliveriesForAdminController = async (req, res) => {
     const deliveries = await DeliveryModel.find({ delivery_date: todayString })
       .populate({
         path: "user", // Customer ki details laayein
-        select: "name phone_no", // Sirf naam aur phone number
+        select: "name phone_no address", // Sirf naam aur phone number
       })
       .populate({
         path: "subscription", // Subscription ki details laayein
-        select: "plan", // Sirf plan ki jaankari
+        populate: {
+          path: "plan",
+          model: "Plan",
+        }, // Sirf plan ki jaankari
       })
       .sort({ createdAt: -1 }); // Naye orders ko sabse upar dikhayein
 

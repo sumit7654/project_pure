@@ -298,7 +298,13 @@ export const getTodaysDeliveriesController = async (req, res) => {
         select: "name address phone_no",
         match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
       })
-      .populate("subscription", "plan");
+      .populate({
+        path: "subscriptions", // अब subscription के अंदर जाओ
+        populate: {
+          path: "plan", // subscription के अंदर 'plan' फील्ड को populate करो
+          model: "Products", // 'Product' मॉडल से (या जो भी आपके प्रोडक्ट मॉडल का नाम है)
+        },
+      });
 
     const assignedDeliveries = todaysDeliveries.filter(
       (delivery) => delivery.user

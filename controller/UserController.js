@@ -396,8 +396,6 @@ export const applyReferralCodeController = async (req, res) => {
   }
 };
 
-// controller/UserController.js
-
 export const getDashboardStatsController = async (req, res) => {
   try {
     // We need to import these models at the top of the file if they aren't already

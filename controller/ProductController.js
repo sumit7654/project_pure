@@ -25,9 +25,15 @@ export const createProductController = async (req, res) => {
       volume,
       image,
       newCategoryIcon,
-      ...otherDetails
+      originalPrice,
+      infoTag,
+      isMostSubscribed,
+      discount,
+      trialOffer,
+      detail,
     } = req.body;
 
+    // --- Validation ---
     if (!name || !price || !category || !volume || !image) {
       return res
         .status(400)
@@ -36,21 +42,37 @@ export const createProductController = async (req, res) => {
 
     // "Find or Create" logic for the category
     await CategoryModel.findOneAndUpdate(
-      { name: { $regex: new RegExp(`^${category}$`, "i") } },
+      { name: { $regex: new RegExp(`^${category}$`, "i") } }, // Case-insensitive search
       {
         $setOnInsert: {
+          // This only runs if a NEW document is created
           name: category,
           id: new Date().getTime().toString(),
-          // ✅ Use the new icon URL if provided, otherwise a default
-          icon: newCategoryIcon || "https://path-to-your/default-icon.png",
+          // Use the new icon URL if provided, otherwise use a default placeholder
+          icon:
+            newCategoryIcon ||
+            "https://placehold.co/100x100/CCCCCC/FFFFFF?text=Icon",
         },
       },
-      { upsert: true }
+      { upsert: true } // The magic: if it can't find one, it creates one
     );
-
+    // --- Create the Product ---
+    // The `create` method takes an object with all the fields.
     const newProduct = await ProductModel.create({
-      /* ... create product ... */
+      id: new Date().getTime().toString(), // Generate a simple unique ID
+      name,
+      price,
+      category,
+      volume,
+      image,
+      originalPrice,
+      infoTag,
+      isMostSubscribed,
+      discount,
+      trialOffer,
+      detail,
     });
+
     res.status(201).send({
       success: true,
       message: "Product created successfully!",

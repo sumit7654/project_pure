@@ -306,10 +306,11 @@ export const getTodaysDeliveriesController = async (req, res) => {
           model: "Products", // 'Product' मॉडल से (या जो भी आपके प्रोडक्ट मॉडल का नाम है)
         },
       });
-
+    console.log("Todaysdeliveries", todaysDeliveries);
     const assignedDeliveries = todaysDeliveries.filter(
       (delivery) => delivery.user
     );
+    console.log("assignedDeliveries", assignedDeliveries);
 
     res.status(200).json({
       success: true,
@@ -319,6 +320,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
     res
       .status(500)
       .send({ success: false, message: "Error fetching deliveries", error });
+    console.log("Error is ", error);
   }
 };
 export const getUnassignedDeliveriesController = async (req, res) => {

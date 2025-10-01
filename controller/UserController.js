@@ -279,6 +279,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
   try {
     const { deliveryBoyId } = req.params;
     const deliveryBoy = await Usermodel.findById(deliveryBoyId);
+    console.log("delivry boy ", deliveryBoy);
 
     if (
       !deliveryBoy ||

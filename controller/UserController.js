@@ -294,7 +294,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
       delivery_date: todayString,
       status: "Pending",
     })
-      .populate({
+      .strictPopulate({
         path: "user",
         select: "name address phone_no",
         match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },

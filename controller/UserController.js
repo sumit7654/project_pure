@@ -299,7 +299,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
         select: "name address phone_no",
         match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
       })
-      .populate({
+      .strictPopulate({
         path: "subscriptions", // अब subscription के अंदर जाओ
         populate: {
           path: "plan", // subscription के अंदर 'plan' फील्ड को populate करो

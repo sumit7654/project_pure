@@ -284,20 +284,51 @@ export const getAllSubscriptionsController = async (req, res) => {
 
 // for cancel the subscription
 
+// export const cancelSubscriptionsController = async (req, res) => {
+//   try {
+//     const { subscriptionId } = req.params;
+//     console.log(subscriptionId);
+//     const subscription = await SubscriptionModel.findById(subscriptionId);
+//     if (!subscription) {
+//       return res
+//         .status(404)
+//         .send({ success: false, message: "Subscription not found." });
+//     }
+//   } catch (error) {
+//     console.error("Error in deactivating subscription !", error);
+//     res
+//       .status(500)
+//       .send({ success: false, message: "Error in deactivating subscriptions" });
+//   }
+// };
+
 export const cancelSubscriptionsController = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
-    console.log(subscriptionId);
+
+    console.log("Cancel request for subscription:", subscriptionId);
+
+    // Find subscription
     const subscription = await SubscriptionModel.findById(subscriptionId);
     if (!subscription) {
       return res
         .status(404)
         .send({ success: false, message: "Subscription not found." });
     }
+
+    // Update subscription status
+    subscription.status = "cancelled"; // 👈 Make sure this field exists in your model
+    subscription.cancelledAt = new Date(); // Optional: track cancel time
+    await subscription.save();
+
+    console.log("Subscription cancelled successfully");
+    return res
+      .status(200)
+      .send({ success: true, message: "Subscription cancelled successfully." });
   } catch (error) {
-    console.error("Error in deactivating subscription !", error);
-    res
+    console.error("Error in deactivating subscription:", error);
+    return res
       .status(500)
-      .send({ success: false, message: "Error in deactivating subscriptions" });
+      .send({ success: false, message: "Error cancelling subscription" });
   }
 };

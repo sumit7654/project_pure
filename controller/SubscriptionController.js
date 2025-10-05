@@ -310,6 +310,7 @@ export const cancelSubscriptionsController = async (req, res) => {
 
     // Find subscription
     const subscription = await SubscriptionModel.findById(subscriptionId);
+    console.log("Subscription ", subscription);
     if (!subscription) {
       return res
         .status(404)
@@ -317,7 +318,7 @@ export const cancelSubscriptionsController = async (req, res) => {
     }
 
     // Update subscription status
-    subscription.status = "cancelled"; // 👈 Make sure this field exists in your model
+    subscription.is_active = false; // 👈 Make sure this field exists in your model
     subscription.cancelledAt = new Date(); // Optional: track cancel time
     await subscription.save();
 

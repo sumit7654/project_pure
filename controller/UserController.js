@@ -299,13 +299,9 @@ export const getTodaysDeliveriesController = async (req, res) => {
         select: "name address phone_no",
         match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
       })
-<<<<<<< HEAD
 
       .populate("subscription");
 
-=======
-      .populate("subscription");
->>>>>>> f66ac358daad40dd36ff5ea7fb44b798c04fb466
     console.log("Todaysdeliveries", todaysDeliveries);
     const assignedDeliveries = todaysDeliveries.filter(
       (delivery) => delivery.user

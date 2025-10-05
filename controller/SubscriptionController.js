@@ -287,7 +287,7 @@ export const getAllSubscriptionsController = async (req, res) => {
 export const cancelSubscriptionsController = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
-
+    console.log(subscriptionId);
     const subscription = await SubscriptionModel.findById(subscriptionId);
     if (!subscription) {
       return res

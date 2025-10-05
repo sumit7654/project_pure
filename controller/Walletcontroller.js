@@ -29,11 +29,9 @@ export const addMoneyController = async (req, res) => {
         .send({ message: "Amount must be a positive number" });
     }
 
-    // यहाँ ठीक किया गया: walletmodel -> WalletModel
     let wallet = await WalletModel.findOne({ phone_no }).session(session);
 
     if (!wallet) {
-      // यहाँ भी ठीक किया गया: walletmodel -> WalletModel
       wallet = new WalletModel({ phone_no, balance: 0 });
     }
 

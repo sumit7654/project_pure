@@ -39,17 +39,9 @@ const processReferralReward = async (newUserId, session) => {
     // Check karein ki referrer ke paas walletId hai ya nahi
     if (!referrer.walletId) {
       console.warn(
-        `Chetaavni: Referrer ${referrer._id} ke paas walletId nahi tha. Abhi banaya ja raha hai...`
+        `Warning: Referrer ${referrer._id} don't have wallet id. its now creating...`
       );
-
-      // const newWallet = new WalletModel({
-      //   phone_no: referrer.phone_no,
-      //   balance: referrer.walletBalance || 0,
-      // });
-      // const savedWallet = await newWallet.save({ session });
       let existingWallet;
-      // ✅ SUDHAR YAHAN HAI: Pehle dhoondo, fir banao
-      // Step 1: Check karo ki kya wallet pehle se hai
       existingWallet = await WalletModel.findOne({
         phone_no: referrer.phone_no,
       }).session(session);
@@ -57,7 +49,7 @@ const processReferralReward = async (newUserId, session) => {
       // Step 2: Agar wallet nahi mila, tabhi naya banao
       if (!existingWallet) {
         console.log(
-          `Wallet nahi mila. Referrer ke liye naya wallet banaya ja raha hai...`
+          `there is no wallet. Referrer ke liye naya wallet banaya ja raha hai...`
         );
         const newWallet = new WalletModel({
           phone_no: referrer.phone_no,
@@ -65,7 +57,7 @@ const processReferralReward = async (newUserId, session) => {
         });
         existingWallet = await newWallet.save({ session });
       } else {
-        console.log(`Purana wallet mil gaya. User se link kiya ja raha hai...`);
+        console.log(`wallet already exist.. connecting with user ...`);
       }
       await Usermodel.findByIdAndUpdate(
         referrer._id,
@@ -75,7 +67,9 @@ const processReferralReward = async (newUserId, session) => {
 
       referrer.walletId = existingWallet._id;
 
-      console.log(`Safalta: Naya wallet ban gaya aur user se link ho gaya.`);
+      console.log(
+        `Success: new wallet are generated .. its connecting with user ...`
+      );
     }
 
     // +++ SELF-HEALING LOGIC KHATM +++
@@ -132,10 +126,10 @@ export const createSubscriptionController = async (req, res) => {
     });
     await newSubscription.save({ session });
 
-    // 💡 SUDHAR YAHAN HAI: Paise kaatne ka kaam bhi transaction ke andar hoga
+    // Paise kaatne ka kaam bhi transaction ke andar hoga
     await performDeduction(newSubscription, session);
 
-    // 💡 SUDHAR YAHAN HAI: Pehli delivery bhi transaction ke andar hi banegi
+    //  Pehli delivery bhi transaction ke andar hi banegi
     const startDateString = start.toISOString().split("T")[0];
     await DeliveryModel.create(
       [
@@ -170,7 +164,7 @@ export const createSubscriptionController = async (req, res) => {
   }
 };
 
-// 💡 FIX: Ye function ab ek specific subscription ko uski ID se update karega
+//  Ye function ab ek specific subscription ko uski ID se update karega
 export const updatePausedDatesController = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
@@ -193,7 +187,7 @@ export const updatePausedDatesController = async (req, res) => {
     const newPausedCount = paused_dates.length;
     let newValidityEndDate = new Date(subscription.validity_end_date);
 
-    // 💡 SUDHAR YAHAN HAI: Validity update karne ka saaf-suthra logic
+    //  Validity update karne ka saaf-suthra logic
     const dateDifference = newPausedCount - oldPausedCount;
     newValidityEndDate.setDate(newValidityEndDate.getDate() + dateDifference);
 
@@ -219,7 +213,7 @@ export const updatePausedDatesController = async (req, res) => {
   }
 };
 
-// User ke saare active subscriptions laane ke liye (Ye bilkul theek hai)
+// User ke saare active subscriptions laane ke liye
 export const getUserActiveSubscriptionsController = async (req, res) => {
   try {
     const { phone_no } = req.params;
@@ -285,5 +279,25 @@ export const getAllSubscriptionsController = async (req, res) => {
     res
       .status(500)
       .send({ success: false, message: "Error fetching all subscriptions" });
+  }
+};
+
+// for cancel the subscription
+
+export const cancelSubscriptionsController = async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+
+    const subscription = await SubscriptionModel.findById(subscriptionId);
+    if (!subscription) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Subscription not found." });
+    }
+  } catch (error) {
+    console.error("Error in deactivating subscription !", error);
+    res
+      .status(500)
+      .send({ success: false, message: "Error in deactivating subscriptions" });
   }
 };

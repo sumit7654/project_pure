@@ -4,7 +4,8 @@ import {
   getUserActiveSubscriptionsController,
   getAllUserSubscriptionsController,
   updatePausedDatesController,
-  getAllSubscriptionsController, // 💡 Naya, theek kiya hua controller
+  getAllSubscriptionsController,
+  cancelSubscriptionsController, // 💡 Naya, theek kiya hua controller
 } from "../controller/SubscriptionController.js";
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.get("/history/:phone_no", getAllUserSubscriptionsController);
 
 // 💡 FIX: Ek specific subscription ko uski ID se update karna
 router.put("/:subscriptionId/pause-dates", updatePausedDatesController);
+router.put("/:subscriptionId/cancel", cancelSubscriptionsController);
 
 export default router;

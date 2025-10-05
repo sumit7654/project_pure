@@ -294,18 +294,14 @@ export const getTodaysDeliveriesController = async (req, res) => {
       delivery_date: todayString,
       status: "Pending",
     })
-      .strictPopulate({
+      .populate({
         path: "user",
         select: "name address phone_no",
         match: { "address.pincode": { $in: deliveryBoy.assignedPincodes } },
       })
-      .strictPopulate({
-        path: "subscriptions", // अब subscription के अंदर जाओ
-        populate: {
-          path: "plan", // subscription के अंदर 'plan' फील्ड को populate करो
-          model: "Products", // 'Product' मॉडल से (या जो भी आपके प्रोडक्ट मॉडल का नाम है)
-        },
-      });
+
+      .populate("subscription");
+
     console.log("Todaysdeliveries", todaysDeliveries);
     const assignedDeliveries = todaysDeliveries.filter(
       (delivery) => delivery.user
@@ -365,7 +361,7 @@ export const applyReferralCodeController = async (req, res) => {
 
     if (!referralCode) {
       return res.status(400).send({ message: "Referral code is required." });
-    } // ✅ FIX #1: Make the search case-insensitive using a regular expression
+    }
 
     const referrer = await Usermodel.findOne({
       referralCode: { $regex: new RegExp(`^${referralCode}$`, "i") },
@@ -407,10 +403,6 @@ export const applyReferralCodeController = async (req, res) => {
 
 export const getDashboardStatsController = async (req, res) => {
   try {
-    // We need to import these models at the top of the file if they aren't already
-    // import SubscriptionModel from "./../model/SubscriptionModel.js";
-    // import Usermodel from "./../model/Usermodel.js";
-
     const [totalSubscriptions, totalUsers, deliveryStaff] = await Promise.all([
       SubscriptionModel.countDocuments({ is_active: true }),
       Usermodel.countDocuments({ role: "customer" }),

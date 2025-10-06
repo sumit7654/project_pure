@@ -42,6 +42,11 @@ const subscriptionSchema = new mongoose.Schema(
       type: Boolean,
       default: true, // सब्सक्रिप्शन चालू है या नहीं
     },
+    cancellationReason: {
+      // ✅ YEH NAYI FIELD ADD KAREIN
+      type: String,
+      default: null,
+    },
     // आखिरी बार पैसा कब कटा, ताकि एक दिन में दो बार न कटे
     last_deduction_date: {
       type: Date,

@@ -120,7 +120,7 @@ export const createSubscriptionController = async (req, res) => {
         message: "User or associated wallet not found.",
       });
     }
-    const wallet = await WalletModel.findById(user.walletId);
+    const wallet = await WalletModel.findById(walletId);
     console.log("wallet id is : ", wallet);
 
     if (!wallet) {

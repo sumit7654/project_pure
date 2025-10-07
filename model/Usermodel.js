@@ -63,6 +63,9 @@ const userSchema = new mongoose.Schema(
         type: pointSchema,
         index: "2dsphere", // Location-based search ke liye zaroori
       },
+      walletId: {
+        type: String,
+      },
     },
   },
   {

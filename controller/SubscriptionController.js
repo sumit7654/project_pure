@@ -114,13 +114,13 @@ export const createSubscriptionController = async (req, res) => {
     const user = await Usermodel.findById(userId);
 
     console.log("user is : ", user);
-    if (!user) {
+    if (!user || !user.walletId) {
       return res.status(404).send({
         success: false,
         message: "User or associated wallet not found.",
       });
     }
-    const wallet = await WalletModel.findById(walletId);
+    const wallet = await WalletModel.findById(user.walletId);
     console.log("wallet id is : ", wallet);
 
     if (!wallet) {

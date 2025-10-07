@@ -104,9 +104,9 @@ const processReferralReward = async (newUserId, session) => {
 };
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
-  const { phone_no, plan, startDate, userId, price_per_day } = req.body;
+  const { phone_no, plan, startDate, userId } = req.body;
   try {
-    if (!phone_no || !plan || !startDate || !userId || !price_per_day) {
+    if (!phone_no || !plan || !startDate || !userId) {
       throw new Error("Missing required fields for subscription.");
     }
 
@@ -132,7 +132,7 @@ export const createSubscriptionController = async (req, res) => {
       return res.status(402).send({
         // 402 Payment Required ek aacha status code hai iske liye
         success: false,
-        message: `Insufficient balance. You need ₹${plan.price} but you only have ₹${wallet.balance}.`,
+        message: `Insufficient balance. You need ₹${plan.price_per_day} but you only have ₹${wallet.balance}.`,
       });
     }
   } catch (error) {

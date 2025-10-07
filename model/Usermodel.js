@@ -64,7 +64,10 @@ const userSchema = new mongoose.Schema(
         index: "2dsphere", // Location-based search ke liye zaroori
       },
       walletId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId, // Iska type ObjectId hoga
+        ref: "Wallet", // Yeh 'Wallet' model ko refer karega
+        required: false, // Ise false rakhein ya hata dein
+        default: null,
       },
     },
   },

@@ -149,6 +149,10 @@ export const createSubscriptionController = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
+    if (!phone_no || !plan || !startDate || !userId) {
+      throw new Error("Missing required fields for subscription.");
+    }
+
     const start = new Date(startDate);
     // const end = new Date(start);
     // end.setDate(start.getDate() + plan.duration_days - 1);

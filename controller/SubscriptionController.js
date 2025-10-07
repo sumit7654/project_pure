@@ -106,7 +106,7 @@ const processReferralReward = async (newUserId, session) => {
 export const createSubscriptionController = async (req, res) => {
   const { phone_no, plan, startDate, userId } = req.body;
   try {
-    if (!phone_no || !plan || !startDate || !userId) {
+    if (!phone_no || !plan || !startDate || !userId || !price_per_day) {
       throw new Error("Missing required fields for subscription.");
     }
 
@@ -128,7 +128,7 @@ export const createSubscriptionController = async (req, res) => {
         .send({ success: false, message: "Wallet not found for this user." });
     }
     // Yahan check karo ki paise hain ya nahi
-    if (wallet.balance < plan.price) {
+    if (wallet.balance < plan.price_per_day) {
       return res.status(402).send({
         // 402 Payment Required ek aacha status code hai iske liye
         success: false,

@@ -104,25 +104,60 @@ const processReferralReward = async (newUserId, session) => {
 };
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
     const { phone_no, plan, startDate, userId } = req.body;
 
     if (!phone_no || !plan || !startDate || !userId) {
       throw new Error("Missing required fields for subscription.");
     }
+    const wallet = await WalletModel.findById(user.walletId);
+    if (!wallet) {
+      return res
+        .status(404)
+        .send({ success: false, message: "Wallet not found for this user." });
+    }
+    // Yahan check karo ki paise hain ya nahi
+    if (wallet.balance < plan.price) {
+      return res.status(402).send({
+        // 402 Payment Required ek aacha status code hai iske liye
+        success: false,
+        message: `Insufficient balance. You need ₹${plan.price} but you only have ₹${wallet.balance}.`,
+      });
+    }
+  } catch (error) {
+    console.error("Error during pre-check:", error);
+    return res.status(500).send({
+      success: false,
+      message: "Error verifying wallet balance.",
+      error: error.message,
+    });
+  }
 
+  // Step 3: Ab jab sab theek hai, tab hi transaction shuru karo
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
     const start = new Date(startDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + plan.duration_days - 1);
+    // const end = new Date(start);
+    // end.setDate(start.getDate() + plan.duration_days - 1);
+
+    // ▼▼▼ YAHAN BADLAAV HAI ▼▼▼
+    let validityEndDate = null; // Default null rakho
+
+    // Sirf 'One-time' plan ke liye end date set karo
+    if (plan.delivery_type === "One-time") {
+      const end = new Date(start);
+      end.setDate(start.getDate() + 1); // Ek din baad khatam
+      validityEndDate = end;
+    }
 
     const newSubscription = new SubscriptionModel({
       user: userId,
       phone_no,
       plan,
       start_date: start,
-      validity_end_date: end,
+      validity_end_date: validityEndDate,
+      is_active: true, // Hamesha active shuru hoga
     });
     await newSubscription.save({ session });
 
@@ -161,6 +196,9 @@ export const createSubscriptionController = async (req, res) => {
       message: "Error creating subscription",
       error: error.message,
     });
+  } finally {
+    // Session ko hamesha end karo
+    session.endSession();
   }
 };
 

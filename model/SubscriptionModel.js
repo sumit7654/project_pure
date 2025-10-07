@@ -26,11 +26,12 @@ const subscriptionSchema = new mongoose.Schema(
     },
     validity_end_date: {
       type: Date,
-      required: true,
+      required: false,
+      default: null,
     },
     // जिन दिनों डिलीवरी नहीं चाहिए
     skip_days: {
-      type: [String], // যেমন ['Saturday', 'Sunday']
+      type: [String], // ['Saturday', 'Sunday']
       default: [],
     },
     // किसी खास तारीख को डिलीवरी रोकने के लिए
@@ -40,14 +41,12 @@ const subscriptionSchema = new mongoose.Schema(
     },
     is_active: {
       type: Boolean,
-      default: true, // सब्सक्रिप्शन चालू है या नहीं
+      default: true,
     },
     cancellationReason: {
-      // ✅ YEH NAYI FIELD ADD KAREIN
       type: String,
       default: null,
     },
-    // आखिरी बार पैसा कब कटा, ताकि एक दिन में दो बार न कटे
     last_deduction_date: {
       type: Date,
       default: null,

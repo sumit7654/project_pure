@@ -110,6 +110,16 @@ export const createSubscriptionController = async (req, res) => {
     if (!phone_no || !plan || !startDate || !userId) {
       throw new Error("Missing required fields for subscription.");
     }
+
+    const user = await Usermodel.findById(userId);
+    if (!user || !user.walletId) {
+      return res
+        .status(404)
+        .send({
+          success: false,
+          message: "User or associated wallet not found.",
+        });
+    }
     const wallet = await WalletModel.findById(user.walletId);
     if (!wallet) {
       return res

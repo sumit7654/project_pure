@@ -104,7 +104,7 @@ const processReferralReward = async (newUserId, session) => {
 };
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
-  const { phone_no, plan, startDate, userId } = req.body;
+  const { phone_no, plan, startDate, userId, price_per_day } = req.body;
   try {
     if (!phone_no || !plan || !startDate || !userId || !price_per_day) {
       throw new Error("Missing required fields for subscription.");

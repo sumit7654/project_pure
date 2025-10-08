@@ -225,6 +225,10 @@ export const updatePausedDatesController = async (req, res) => {
         .send({ message: "paused_dates must be an array." });
     }
 
+    const sanitizedDates = paused_dates.map(
+      (date) => new Date(date).toISOString().split("T")[0]
+    );
+
     const subscription = await SubscriptionModel.findById(subscriptionId);
     if (!subscription) {
       return res
@@ -243,7 +247,7 @@ export const updatePausedDatesController = async (req, res) => {
     const updatedSubscription = await SubscriptionModel.findByIdAndUpdate(
       subscriptionId,
       {
-        paused_dates: paused_dates,
+        paused_dates: sanitizedDates,
         validity_end_date: newValidityEndDate,
       },
       { new: true }

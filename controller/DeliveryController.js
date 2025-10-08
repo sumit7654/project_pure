@@ -162,7 +162,7 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
     //   delivery_date: todayString,
     // }).populate('subscription');
 
-    const deliveries = await Delivery.find().populate({
+    const deliveries = await DeliveryModel.find().populate({
       path: "subscription", // Subscription ko populate karein
       select: "plan", // Aur uske andar se sirf plan ki jaankari laayein
     });

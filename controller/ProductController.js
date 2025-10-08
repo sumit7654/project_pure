@@ -91,6 +91,9 @@ export const updateProductController = async (req, res) => {
     const { productId } = req.params;
     const { category, newCategoryIcon, ...productData } = req.body;
 
+    console.log("Product Id is : ", productId);
+    console.log("Req params : ", req.params);
+
     if (category) {
       await CategoryModel.findOneAndUpdate(
         { name: { $regex: new RegExp(`^${category}$`, "i") } },
@@ -110,6 +113,7 @@ export const updateProductController = async (req, res) => {
       { category, ...productData },
       { new: true }
     );
+    console.log("Update product ", updatedProduct);
     if (!updatedProduct) {
       return res
         .status(404)

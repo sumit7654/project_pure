@@ -160,13 +160,7 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
     const deliveries = await DeliveryModel.find({
       user: userId,
       delivery_date: todayString,
-    }).populate({
-      path: "subscription",
-      populate: {
-        path: "plan",
-        model: "Plan",
-      },
-    });
+    }).populate("subscription");
     console.log("Deliveries= ", deliveries);
 
     if (!deliveries || deliveries.length === 0) {

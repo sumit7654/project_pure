@@ -100,3 +100,76 @@ export const markAsDeliveredController = async (req, res) => {
     });
   }
 };
+
+// export const getTodaysDeliveryForUserController = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const todayString = getTodayInKolkataString();
+
+//     // User ke liye aaj ki delivery dhoondhein
+//     const delivery = await DeliveryModel.findOne({
+//       user: userId,
+//       delivery_date: todayString,
+//     }).populate({
+//       path: "subscription",
+//       select: "plan",
+//     });
+
+//     if (!delivery) {
+//       return res
+//         .status(404)
+//         .send({ success: false, message: "No delivery scheduled for today." });
+//     }
+
+//     res.status(200).send({ success: true, delivery });
+//   } catch (error) {
+//     res.status(500).send({ success: false, message: "Server error." });
+//   }
+// };
+
+// ✅ YEH FUNCTION UPDATE KIYA GAYA HAI
+export const getTodaysDeliveryForUserController = async (req, res) => {
+  console.log(
+    "\n--- [BACKEND] 1. Request received for a user's today delivery ---"
+  );
+  try {
+    const { userId } = req.params;
+    console.log(`--- [BACKEND] 2. User ID received: ${userId} ---`);
+
+    const todayString = getTodayInKolkataString();
+    console.log(
+      `--- [BACKEND] 3. Searching for deliveries for date: ${todayString} ---`
+    );
+
+    const delivery = await DeliveryModel.findOne({
+      user: userId,
+      delivery_date: todayString,
+    }).populate({
+      path: "subscription",
+      select: "plan", // Sirf plan ki details laayein
+    });
+
+    if (!delivery) {
+      console.log(
+        "--- [BACKEND] 4a. No delivery found for this user today. ---"
+      );
+      return res
+        .status(404)
+        .send({ success: false, message: "No delivery scheduled for today." });
+    }
+
+    console.log("--- [BACKEND] 4b. Delivery found! Sending to app. ---");
+    res.status(200).send({ success: true, delivery });
+  } catch (error) {
+    console.error(
+      "--- !!! [BACKEND] CRITICAL ERROR in getTodaysDeliveryForUserController !!! ---",
+      error
+    );
+    res
+      .status(500)
+      .send({
+        success: false,
+        message: "Server error while fetching delivery status.",
+      });
+  }
+};

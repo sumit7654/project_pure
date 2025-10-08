@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema({
   price: { type: String, required: true },
   originalPrice: { type: String },
   image: { type: String, required: true },
+  infoTag: { type: String },
   isMostSubscribed: { type: Boolean, default: false }, // Use Boolean for true/false
   discount: { type: String },
   trialOffer: { type: String },

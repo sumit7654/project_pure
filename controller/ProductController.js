@@ -111,7 +111,9 @@ export const updateProductController = async (req, res) => {
       { new: true }
     );
     if (!updatedProduct) {
-      /* ... not found ... */
+      return res
+        .status(404)
+        .send({ success: false, message: "Product not found with this ID." });
     }
     res.status(200).send({
       success: true,

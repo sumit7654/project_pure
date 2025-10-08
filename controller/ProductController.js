@@ -89,7 +89,7 @@ export const createProductController = async (req, res) => {
 export const updateProductController = async (req, res) => {
   try {
     const { productId } = req.params;
-    const { category, newCategoryIcon, ...updatedData } = req.body;
+    const { category, newCategoryIcon, ...productData } = req.body;
 
     if (category) {
       await CategoryModel.findOneAndUpdate(
@@ -107,7 +107,7 @@ export const updateProductController = async (req, res) => {
 
     const updatedProduct = await ProductModel.findByIdAndUpdate(
       productId,
-      { category, ...updatedData },
+      { category, ...productData },
       { new: true }
     );
     if (!updatedProduct) {

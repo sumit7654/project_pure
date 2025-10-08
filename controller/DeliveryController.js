@@ -162,13 +162,11 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
     //   delivery_date: todayString,
     // }).populate('subscription');
 
-    const deliveries = await Delivery.find()
-      .populate({
-        path: "subscription",
-        select:
-          "plan phone_no start_date validity_end_date cancellationReason is_active",
-      })
-      .lean();
+    const deliveries = await Delivery.find().populate({
+      path: "subscription", // Subscription ko populate karein
+      select: "plan", // Aur uske andar se sirf plan ki jaankari laayein
+    });
+
     console.log("Deliveries= ", deliveries);
 
     if (!deliveries || deliveries.length === 0) {

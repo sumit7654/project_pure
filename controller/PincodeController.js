@@ -25,12 +25,10 @@ export const checkServiceabilityController = async (req, res) => {
       return res.status(200).json({ success: true, serviceable: false });
     }
   } catch (error) {
-    res
-      .status(500)
-      .send({
-        success: false,
-        message: "Error checking serviceability",
-        error,
-      });
+    res.status(500).send({
+      success: false,
+      message: "Error checking serviceability",
+      error,
+    });
   }
 };

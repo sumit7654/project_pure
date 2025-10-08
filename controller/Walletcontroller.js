@@ -2,7 +2,6 @@
 // --- FINAL CORRECTED CODE ---
 
 import mongoose from "mongoose";
-// ध्यान दें: सुनिश्चित करें कि आपकी फाइल का नाम "walletmodel.js" (सब छोटा) ही है।
 import WalletModel from "../model/Walletmodel.js";
 import TransactionModel from "../model/TransactionModel.js";
 

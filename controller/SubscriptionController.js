@@ -410,12 +410,10 @@ export const getDeliveriesForSubscriptionController = async (req, res) => {
     });
 
     if (!deliveries) {
-      return res
-        .status(404)
-        .send({
-          success: false,
-          message: "No deliveries found for this subscription.",
-        });
+      return res.status(404).send({
+        success: false,
+        message: "No deliveries found for this subscription.",
+      });
     }
 
     res.status(200).send({ success: true, deliveries });

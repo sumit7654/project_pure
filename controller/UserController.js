@@ -7,6 +7,7 @@ import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAR
 // import { sendPushNotification } from "./../services/notificationService.js";
 import Walletmodel from "./../model/Walletmodel.js";
 import { getTodayInKolkataString } from "../utils/dateHelper.js";
+import TransactionModel from "../model/TransactionModel.js";
 // import Usermodel from "./../model/Usermodel.js";
 
 // ##############################################################################
@@ -585,12 +586,10 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
   const { phone_no, amount, description } = req.body;
 
   if (!phone_no || !amount || !description) {
-    return res
-      .status(400)
-      .send({
-        success: false,
-        message: "Phone number, amount, and description are required.",
-      });
+    return res.status(400).send({
+      success: false,
+      message: "Phone number, amount, and description are required.",
+    });
   }
 
   const session = await mongoose.startSession();
@@ -628,12 +627,10 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
     // Agar sab kuch safal raha, to transaction ko poora karein
     await session.commitTransaction();
 
-    res
-      .status(200)
-      .send({
-        success: true,
-        message: `Successfully added ₹${numericAmount} to wallet for ${phone_no}.`,
-      });
+    res.status(200).send({
+      success: true,
+      message: `Successfully added ₹${numericAmount} to wallet for ${phone_no}.`,
+    });
   } catch (error) {
     // Agar koi bhi galti hui, to sabhi badlav undo karein
     await session.abortTransaction();

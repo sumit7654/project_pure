@@ -20,7 +20,7 @@ router.put("/update/:staffId", updateStaffController);
 router.get("/dashboard-stats", getDashboardStatsController);
 router.get("/todays-deliveries/:deliveryBoyId", getTodaysDeliveriesController);
 router.get("/unassigned-deliveries", getUnassignedDeliveriesController);
-router.post("/add-to-wallet", isAdmin, addMoneyToWalletByAdminController);
+router.post("/add-to-wallet", addMoneyToWalletByAdminController);
 // router.post("/broadcast", broadcastNotificationController);
 
 export default router;

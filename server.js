@@ -82,17 +82,75 @@ app.get("/", (req, res) => {
 // ==============================================================================
 
 // ✅ Yeh akela, smart job har din subah 1:05 AM baje chalega
+// cron.schedule(
+//   "1 0 * * *",
+//   async () => {
+//     console.log("--- Starting Daily Subscription Processing Job ---");
+//     try {
+//       const today = new Date();
+//       today.setHours(0, 0, 0, 0);
+//       const todayString = getTodayInKolkataString();
+
+//       // Step 1: Sabse pehle, un sabhi subscriptions ko deactivate karein jo pehle hi expire ho chuke hain.
+//       // Yeh ek zaroori safai ka kadam hai.
+//       const deactivationResult = await SubscriptionModel.updateMany(
+//         { is_active: true, validity_end_date: { $lt: today } },
+//         { $set: { is_active: false } }
+//       );
+//       if (deactivationResult.modifiedCount > 0) {
+//         console.log(
+//           `Deactivated ${deactivationResult.modifiedCount} expired subscriptions.`
+//         );
+//       }
+
+//       // Step 2: Ab, un sabhi subscriptions ko dhoondhein jinki delivery aaj honi chahiye.
+//       const subscriptionsToProcess = await SubscriptionModel.find({
+//         is_active: true, // Active hona chahiye
+//         start_date: { $lte: new Date() }, // Start date aaj ya usse pehle ki honi chahiye
+//         validity_end_date: { $gte: today }, // Abhi tak expire na hua ho
+//         paused_dates: { $nin: [todayString] }, // Aur aaj ke liye paused na ho
+//       }).populate("user"); // Humein push notifications ke liye user data chahiye
+
+//       console.log(
+//         `Found ${subscriptionsToProcess.length} subscriptions to process for ${todayString}.`
+//       );
+
+//       // Step 3: Har ek subscription ko process karein.
+//       for (const sub of subscriptionsToProcess) {
+//         // Yeh service ab sab kuch handle karegi:
+//         // 1. Wallet balance check karna.
+//         // 2. Balance hone par paise kaatna.
+//         // 3. Sirf paise kaatne ke BAAD hi delivery record banana.
+//         // 4. Kam balance hone par subscription ko pause karna.
+//         await performDeduction(sub);
+//       }
+//     } catch (error) {
+//       console.error(
+//         "CRITICAL ERROR in daily subscription processing job:",
+//         error
+//       );
+//     }
+//     console.log("--- Daily Subscription Processing Job Finished ---");
+//   },
+//   { timezone: "Asia/Kolkata" }
+// );
+
+// ==============================================================================
+// ========================== THE ONLY CRON JOB YOU NEED ========================
+// ==============================================================================
+
+// Yeh akela, smart job har din subah 1:05 AM IST par chalega
 cron.schedule(
-  "1 0 * * *",
+  "13 0 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      // ✅ FIX: Cron job ab hamesha India ki sahi tarikh istemal karega
       const todayString = getTodayInKolkataString();
 
       // Step 1: Sabse pehle, un sabhi subscriptions ko deactivate karein jo pehle hi expire ho chuke hain.
-      // Yeh ek zaroori safai ka kadam hai.
       const deactivationResult = await SubscriptionModel.updateMany(
         { is_active: true, validity_end_date: { $lt: today } },
         { $set: { is_active: false } }
@@ -105,11 +163,11 @@ cron.schedule(
 
       // Step 2: Ab, un sabhi subscriptions ko dhoondhein jinki delivery aaj honi chahiye.
       const subscriptionsToProcess = await SubscriptionModel.find({
-        is_active: true, // Active hona chahiye
+        is_active: true,
         start_date: { $lte: new Date() }, // Start date aaj ya usse pehle ki honi chahiye
         validity_end_date: { $gte: today }, // Abhi tak expire na hua ho
         paused_dates: { $nin: [todayString] }, // Aur aaj ke liye paused na ho
-      }).populate("user"); // Humein push notifications ke liye user data chahiye
+      }).populate("user");
 
       console.log(
         `Found ${subscriptionsToProcess.length} subscriptions to process for ${todayString}.`
@@ -117,7 +175,7 @@ cron.schedule(
 
       // Step 3: Har ek subscription ko process karein.
       for (const sub of subscriptionsToProcess) {
-        // Yeh service ab sab kuch handle karegi:
+        // Yeh service sab kuch handle karegi:
         // 1. Wallet balance check karna.
         // 2. Balance hone par paise kaatna.
         // 3. Sirf paise kaatne ke BAAD hi delivery record banana.
@@ -135,6 +193,9 @@ cron.schedule(
   { timezone: "Asia/Kolkata" }
 );
 
+// Puraane, conflicting cron jobs hata diye gaye hain.
+
+// ############################### ------------------------ #######################
 // Raat 11:50 wala "undelivered orders" ka job hata diya gaya hai.
 // Sabhi pending orders ko automatically refund karna ek khatarnak business logic hai.
 // Yeh kaam admin ko manually karna chahiye.

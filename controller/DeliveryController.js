@@ -162,7 +162,10 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
       delivery_date: todayString,
     }).populate({
       path: "subscription",
-      select: "plan",
+      populate: {
+        path: "plan",
+        model: "Plan",
+      },
     });
     console.log("Deliveries= ", deliveries);
 

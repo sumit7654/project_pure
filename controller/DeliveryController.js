@@ -152,6 +152,9 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
   try {
     const { userId } = req.params;
     const todayString = getTodayInKolkataString();
+    console.log("User is", userId);
+
+    console.log("Today string is : ", todayString);
 
     // ✅ FIX: `find` ka istemal karein taaki saari matching deliveries milein
     const deliveries = await DeliveryModel.find({
@@ -161,6 +164,7 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
       path: "subscription",
       select: "plan",
     });
+    console.log("Deliveries= ", deliveries);
 
     if (!deliveries || deliveries.length === 0) {
       return res.status(404).send({

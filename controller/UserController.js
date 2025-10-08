@@ -579,3 +579,70 @@ export const updateStaffController = async (req, res) => {
 //     res.status(500).send({ success: false, message: "Server error" });
 //   }
 // };
+
+// ✅ YEH NAYA FUNCTION ADD KAREIN
+export const addMoneyToWalletByAdminController = async (req, res) => {
+  const { phone_no, amount, description } = req.body;
+
+  if (!phone_no || !amount || !description) {
+    return res
+      .status(400)
+      .send({
+        success: false,
+        message: "Phone number, amount, and description are required.",
+      });
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const wallet = await WalletModel.findOne({ phone_no }).session(session);
+    if (!wallet) {
+      throw new Error("Wallet not found for this phone number.");
+    }
+
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      throw new Error("Invalid amount specified.");
+    }
+
+    // Step 1: Wallet ka balance badhayein
+    wallet.balance += numericAmount;
+    await wallet.save({ session });
+
+    // Step 2: Ek transaction record banayein
+    await TransactionModel.create(
+      [
+        {
+          walletId: wallet._id,
+          amount: numericAmount,
+          type: "credit",
+          status: "successful",
+          description: `Admin Top-up: ${description}`,
+        },
+      ],
+      { session }
+    );
+
+    // Agar sab kuch safal raha, to transaction ko poora karein
+    await session.commitTransaction();
+
+    res
+      .status(200)
+      .send({
+        success: true,
+        message: `Successfully added ₹${numericAmount} to wallet for ${phone_no}.`,
+      });
+  } catch (error) {
+    // Agar koi bhi galti hui, to sabhi badlav undo karein
+    await session.abortTransaction();
+    console.error("Error adding money to wallet by admin:", error);
+    res
+      .status(500)
+      .send({ success: false, message: error.message || "Operation failed." });
+  } finally {
+    // Session ko hamesha band karein
+    session.endSession();
+  }
+};

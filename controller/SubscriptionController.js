@@ -399,3 +399,28 @@ export const cancelSubscriptionController = async (req, res) => {
       .send({ success: false, message: "Error cancelling subscription." });
   }
 };
+
+export const getDeliveriesForSubscriptionController = async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+
+    // Us subscription se jude saare delivery records dhoondhein
+    const deliveries = await DeliveryModel.find({
+      subscription: subscriptionId,
+    });
+
+    if (!deliveries) {
+      return res
+        .status(404)
+        .send({
+          success: false,
+          message: "No deliveries found for this subscription.",
+        });
+    }
+
+    res.status(200).send({ success: true, deliveries });
+  } catch (error) {
+    console.error("Error fetching deliveries for subscription:", error);
+    res.status(500).send({ success: false, message: "Server error." });
+  }
+};

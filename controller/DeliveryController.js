@@ -157,10 +157,18 @@ export const getTodaysDeliveryForUserController = async (req, res) => {
     console.log("Today string is : ", todayString);
 
     // ✅ FIX: `find` ka istemal karein taaki saari matching deliveries milein
-    const deliveries = await DeliveryModel.find({
-      user: userId,
-      delivery_date: todayString,
-    }).populate("subscription");
+    // const deliveries = await DeliveryModel.find({
+    //   user: userId,
+    //   delivery_date: todayString,
+    // }).populate('subscription');
+
+    const deliveries = await Delivery.find()
+      .populate({
+        path: "subscription",
+        select:
+          "plan phone_no start_date validity_end_date cancellationReason is_active",
+      })
+      .lean();
     console.log("Deliveries= ", deliveries);
 
     if (!deliveries || deliveries.length === 0) {

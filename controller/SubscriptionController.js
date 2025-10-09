@@ -173,7 +173,7 @@ export const createSubscriptionController = async (req, res) => {
     await newSubscription.save({ session });
 
     // Paise kaatne ka kaam bhi transaction ke andar hoga
-    await performDeduction(newSubscription, session);
+    // await performDeduction(newSubscription, session);
 
     //  Pehli delivery bhi transaction ke andar hi banegi
     const startDateString = start.toISOString().split("T")[0];

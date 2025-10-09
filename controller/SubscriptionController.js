@@ -104,10 +104,18 @@ const processReferralReward = async (newUserId, session) => {
 };
 // Naya subscription banane ke liye (Ye bilkul theek hai)
 export const createSubscriptionController = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   const { phone_no, plan, startDate, userId } = req.body;
   try {
     if (!phone_no || !plan || !startDate || !userId) {
       throw new Error("Missing required fields for subscription.");
+    }
+    const product = await ProductModel.findById(plan.productId).session(
+      session
+    );
+    if (!product || product.quantity < plan.quantity) {
+      throw new Error("Sorry, this product is currently out of stock.");
     }
 
     const user = await Usermodel.findById(userId);
@@ -119,6 +127,7 @@ export const createSubscriptionController = async (req, res) => {
         message: "User or associated wallet not found.",
       });
     }
+
     const wallet = await WalletModel.findById(user.walletId);
     console.log("wallet id is : ", wallet);
 
@@ -145,8 +154,7 @@ export const createSubscriptionController = async (req, res) => {
   }
 
   // Step 3: Ab jab sab theek hai, tab hi transaction shuru karo
-  const session = await mongoose.startSession();
-  session.startTransaction();
+
   try {
     const start = new Date(startDate);
     // const end = new Date(start);
@@ -185,13 +193,15 @@ export const createSubscriptionController = async (req, res) => {
     // );
 
     // Yeh transaction ke commit hone se theek pehle hoga
+    product.quantity -= plan.quantity;
+
+    console.log("Product quantity is", product.quantity);
+
     await processReferralReward(userId, session);
     await session.commitTransaction();
-    session.endSession();
-
     res.status(201).json({
       success: true,
-      message: "Subscription created and first delivery scheduled.",
+      message: "Subscription activated successfully!",
       subscription: newSubscription,
     });
   } catch (error) {

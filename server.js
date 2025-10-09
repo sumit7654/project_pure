@@ -141,7 +141,7 @@ app.get("/", (req, res) => {
 
 // Yeh akela, smart job har din subah 1:05 AM IST par chalega
 cron.schedule(
-  "2 0 * * *",
+  "38 0 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {
@@ -164,9 +164,12 @@ cron.schedule(
       const subscriptionsToProcess = await SubscriptionModel.find({
         is_active: true,
         start_date: { $lte: new Date() }, // Start date aaj ya usse pehle ki honi chahiye
-        validity_end_date: { $gte: today }, // Abhi tak expire na hua ho
+        $or: [
+          { validity_end_date: null }, // Hamesha chalne wale plans
+          { validity_end_date: { $gte: today } }, // Fixed-term plans
+        ], // Abhi tak expire na hua ho
         paused_dates: { $nin: [todayString] }, // Aur aaj ke liye paused na ho
-      }).populate("user");
+      }).populate("user", "walletId");
 
       // console.log("Subscription TO Process", subscriptionsToProcess);
 
@@ -176,12 +179,16 @@ cron.schedule(
 
       // Step 3: Har ek subscription ko process karein.
       for (const sub of subscriptionsToProcess) {
-        // Yeh service sab kuch handle karegi:
-        // 1. Wallet balance check karna.
-        // 2. Balance hone par paise kaatna.
-        // 3. Sirf paise kaatne ke BAAD hi delivery record banana.
-        // 4. Kam balance hone par subscription ko pause karna.
-        await performDeduction(sub);
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+          await performDeduction(sub, session);
+          await session.commitTransaction();
+        } catch (error) {
+          await session.abortTransaction();
+        } finally {
+          session.endSession();
+        }
       }
     } catch (error) {
       console.error(

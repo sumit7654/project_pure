@@ -3,11 +3,21 @@ import TransactionModel from "../model/TransactionModel.js";
 import NotificationModel from "../model/NotificationModel.js";
 
 // Ye function ek subscription leta hai aur uske paise kaatta hai
-export const performDeduction = async (subscription) => {
+export const performDeduction = async (subscription, session) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   try {
+    const product = await ProductModel.findById(
+      subscription.plan.productId
+    ).session(session);
+    if (!product || product.quantity < subscription.plan.quantity) {
+      subscription.is_active = false;
+      await subscription.save({ session });
+
+      throw new Error("Product out of stock");
+    }
+
     const wallet = await WalletModel.findOne({
       phone_no: subscription.phone_no,
     });
@@ -22,7 +32,7 @@ export const performDeduction = async (subscription) => {
         [
           {
             recipient: subscription.user,
-            title: "Subscription Paused",
+            title: "Subscription Deactivated",
             message: `Your ${subscription.plan.productName} subscription has been paused due to low wallet balance. Please recharge to resume.`,
             type: "subscription_paused",
             entityId: subscription._id,
@@ -45,14 +55,15 @@ export const performDeduction = async (subscription) => {
       description: `Daily subscription for ${subscription.plan.productName}`,
       razorpayPaymentId: `SUB_${subscription._id}_${today.getTime()}`,
     });
-    const startDateString = start.toISOString().split("T")[0];
-
+    product.quantity -= subscription.plan.quantity;
+    await product.save({ session });
+    const todayString = getTodayInKolkataString();
     await DeliveryModel.create(
       [
         {
           subscription: subscription._id,
           user: userId,
-          delivery_date: startDateString,
+          delivery_date: todayString,
           status: "Pending", // Shuruaati status pending hoga
         },
       ],

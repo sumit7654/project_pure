@@ -35,6 +35,7 @@ const NotificationModel = new mongoose.Schema(
         "delivery_reminder",
         "offer",
         "general",
+        "order confirmed",
       ],
       default: "general",
     },

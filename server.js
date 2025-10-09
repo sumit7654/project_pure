@@ -147,7 +147,6 @@ cron.schedule(
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      // ✅ FIX: Cron job ab hamesha India ki sahi tarikh istemal karega
       const todayString = getTodayInKolkataString();
 
       // Step 1: Sabse pehle, un sabhi subscriptions ko deactivate karein jo pehle hi expire ho chuke hain.

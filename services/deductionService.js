@@ -45,6 +45,19 @@ export const performDeduction = async (subscription) => {
       description: `Daily subscription for ${subscription.plan.productName}`,
       razorpayPaymentId: `SUB_${subscription._id}_${today.getTime()}`,
     });
+    const startDateString = start.toISOString().split("T")[0];
+
+    await DeliveryModel.create(
+      [
+        {
+          subscription: subscription._id,
+          user: userId,
+          delivery_date: startDateString,
+          status: "Pending", // Shuruaati status pending hoga
+        },
+      ],
+      { session }
+    );
 
     // Subscription mein aaj ki tareekh update karein
     subscription.last_deduction_date = today;
@@ -55,7 +68,22 @@ export const performDeduction = async (subscription) => {
     console.log(
       `Successfully deducted ₹${subscription.plan.price_per_day} from ${subscription.phone_no}.`
     );
-    return { success: true, message: "Deduction successful" };
+    await NotificationModel.create(
+      [
+        {
+          recipient: subscription.user,
+          title: "Order confirmed",
+          message: `Your ${subscription.plan.productName} subscription has been scheduled and money are deduct according to your plan`,
+          type: "order confirmed",
+          entityId: subscription._id,
+        },
+      ],
+      { session }
+    );
+    return {
+      success: true,
+      message: "Deduction successful and today order created successfully",
+    };
   } catch (err) {
     console.error(
       `Failed to process deduction for ${subscription.phone_no}:`,

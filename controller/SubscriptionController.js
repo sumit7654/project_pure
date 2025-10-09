@@ -152,10 +152,8 @@ export const createSubscriptionController = async (req, res) => {
     // const end = new Date(start);
     // end.setDate(start.getDate() + plan.duration_days - 1);
 
-    // ▼▼▼ YAHAN BADLAAV HAI ▼▼▼
     let validityEndDate = null; // Default null rakho
 
-    // Sirf 'One-time' plan ke liye end date set karo
     if (plan.delivery_type === "One-time") {
       const end = new Date(start);
       end.setDate(start.getDate() + 1); // Ek din baad khatam
@@ -172,21 +170,19 @@ export const createSubscriptionController = async (req, res) => {
     });
     await newSubscription.save({ session });
 
-    // Paise kaatne ka kaam bhi transaction ke andar hoga
-    // await performDeduction(newSubscription, session);
+    // const startDateString = start.toISOString().split("T")[0];
 
-    //  Pehli delivery bhi transaction ke andar hi banegi
-    const startDateString = start.toISOString().split("T")[0];
-    await DeliveryModel.create(
-      [
-        {
-          subscription: newSubscription._id,
-          user: userId,
-          delivery_date: startDateString,
-        },
-      ],
-      { session }
-    );
+    // await DeliveryModel.create(
+    //   [
+    //     {
+    //       subscription: newSubscription._id,
+    //       user: userId,
+    //       delivery_date: startDateString,
+    //       status: "Pending", // Shuruaati status pending hoga
+    //     },
+    //   ],
+    //   { session }
+    // );
 
     // Yeh transaction ke commit hone se theek pehle hoga
     await processReferralReward(userId, session);

@@ -1,5 +1,6 @@
 import WalletModel from "../model/Walletmodel.js";
 import TransactionModel from "../model/TransactionModel.js";
+import NotificationModel from "../model/NotificationModel.js";
 
 // Ye function ek subscription leta hai aur uske paise kaatta hai
 export const performDeduction = async (subscription) => {
@@ -17,6 +18,18 @@ export const performDeduction = async (subscription) => {
       );
       subscription.is_active = false;
       await subscription.save();
+      await NotificationModel.create(
+        [
+          {
+            recipient: subscription.user,
+            title: "Subscription Paused",
+            message: `Your ${subscription.plan.productName} subscription has been paused due to low wallet balance. Please recharge to resume.`,
+            type: "subscription_paused",
+            entityId: subscription._id,
+          },
+        ],
+        { session }
+      );
       return { success: false, message: "Insufficient balance" };
     }
 

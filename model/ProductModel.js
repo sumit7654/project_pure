@@ -14,6 +14,12 @@ const productSchema = new mongoose.Schema({
   discount: { type: String },
   trialOffer: { type: String },
   detail: { type: String },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 0, // Quantity cannot be negative
+    default: 0, // If not provided, it's out of stock by default
+  },
 });
 
 export default mongoose.model("Product", productSchema);

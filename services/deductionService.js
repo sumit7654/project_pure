@@ -9,7 +9,7 @@ export const performDeduction = async (subscription, session) => {
   today.setHours(0, 0, 0, 0);
 
   try {
-    const product = await ProductModel.findById(
+    const product = await ProductModel.findOne(
       subscription.plan.productId
     ).session(session);
     if (!product || product.quantity < subscription.plan.quantity) {

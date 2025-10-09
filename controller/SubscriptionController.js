@@ -112,9 +112,7 @@ export const createSubscriptionController = async (req, res) => {
     if (!phone_no || !plan || !startDate || !userId) {
       throw new Error("Missing required fields for subscription.");
     }
-    const product = await ProductModel.findById(plan.productId).session(
-      session
-    );
+    const product = await ProductModel.findOne(plan.productId).session(session);
     if (!product || product.quantity < plan.quantity) {
       throw new Error("Sorry, this product is currently out of stock.");
     }

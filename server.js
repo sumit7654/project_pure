@@ -141,7 +141,7 @@ app.get("/", (req, res) => {
 
 // Yeh akela, smart job har din subah 1:05 AM IST par chalega
 cron.schedule(
-  "26 0 * * *",
+  "2 0 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {
@@ -168,6 +168,8 @@ cron.schedule(
         validity_end_date: { $gte: today }, // Abhi tak expire na hua ho
         paused_dates: { $nin: [todayString] }, // Aur aaj ke liye paused na ho
       }).populate("user");
+
+      // console.log("Subscription TO Process", subscriptionsToProcess);
 
       console.log(
         `Found ${subscriptionsToProcess.length} subscriptions to process for ${todayString}.`

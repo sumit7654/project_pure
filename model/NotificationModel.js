@@ -4,9 +4,9 @@ const NotificationModel = new mongoose.Schema(
   {
     recipient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "User", // 'User' model se joda gaya hai
       required: true,
-      index: true,
+      index: true, // Ispe index lagane se user ke notifications tezi se milenge
     },
 
     title: {
@@ -37,6 +37,11 @@ const NotificationModel = new mongoose.Schema(
         "general",
       ],
       default: "general",
+    },
+
+    entityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: false,
     },
   },
   {

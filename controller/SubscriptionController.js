@@ -1,10 +1,11 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 import SubscriptionModel from "../model/SubscriptionModel.js";
 import { performDeduction } from "../services/deductionService.js";
 import DeliveryModel from "../model/DeliveryModel.js";
 import Usermodel from "../model/Usermodel.js"; // <-- ✅ Ise jodein
 import TransactionModel from "../model/TransactionModel.js";
 import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
+import mongoose from "mongoose";
 
 // =================================================================================
 // =================== REFERRAL REWARD LOGIC (HELPER FUNCTION) =====================

@@ -425,7 +425,6 @@ export const cancelSubscriptionController = async (req, res) => {
 
     subscription.is_active = false;
     subscription.cancellationReason = reason; // Reason ko save karein
-    await subscription.save();
 
     await NotificationModel.create(
       [
@@ -439,7 +438,7 @@ export const cancelSubscriptionController = async (req, res) => {
       ],
       { session }
     );
-
+    await subscription.save();
     res
       .status(200)
       .send({ success: true, message: "Subscription cancelled successfully." });

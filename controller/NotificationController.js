@@ -17,7 +17,7 @@ export const getNotificationsController = async (req, res) => {
     const notifications = await NotificationModel.find({ recipient: userId })
       .sort({ createdAt: -1 }) // Step 3: Sabse naye notifications ko sabse upar rakhein
       .limit(50); // Ek baar mein 50 se zyada notifications na bhejein (performance ke liye)
-
+    console.log("Notification : ", notifications);
     // Step 4: Safal response bhejein
     res.status(200).send({
       success: true,

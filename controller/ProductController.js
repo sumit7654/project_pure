@@ -31,6 +31,7 @@ export const createProductController = async (req, res) => {
       discount,
       trialOffer,
       detail,
+      quantity,
     } = req.body;
 
     // --- Validation ---
@@ -71,6 +72,7 @@ export const createProductController = async (req, res) => {
       discount,
       trialOffer,
       detail,
+      quantity,
     });
 
     res.status(201).send({

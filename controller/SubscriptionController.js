@@ -209,8 +209,10 @@ export const createSubscriptionController = async (req, res) => {
 
     // Yeh transaction ke commit hone se theek pehle hoga
     product.quantity -= plan.quantity;
-
+    await newSubscription.save({ session });
     console.log("Product quantity is", product.quantity);
+
+    await product.save({ session }); // ✅ SAHI FIX YAHAN HAI
 
     await processReferralReward(userId, session);
     await session.commitTransaction();

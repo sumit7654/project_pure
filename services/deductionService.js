@@ -65,7 +65,7 @@ export const performDeduction = async (subscription, session) => {
       [
         {
           subscription: subscription._id,
-          user: userId,
+          user: subscription.user._id, // ✅ SAHI FIX YAHAN HAI
           delivery_date: todayString,
           status: "Pending", // Shuruaati status pending hoga
         },

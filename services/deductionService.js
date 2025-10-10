@@ -9,9 +9,9 @@ export const performDeduction = async (subscription, session) => {
   today.setHours(0, 0, 0, 0);
 
   try {
-    const product = await ProductModel.findOne(
-      subscription.plan.productId
-    ).session(session);
+    const product = await ProductModel.findOne({
+      id: subscription.plan.productId,
+    }).session(session);
     if (!product || product.quantity < subscription.plan.quantity) {
       subscription.is_active = false;
       await subscription.save({ session });

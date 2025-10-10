@@ -598,6 +598,7 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
 
   try {
     const wallet = await WalletModel.findOne({ phone_no }).session(session);
+    const user = await Usermodel.findOne({ phone_no }).session(session); // ✅ NAYA STEP
     if (!wallet) {
       throw new Error("Wallet not found for this phone number.");
     }
@@ -613,11 +614,11 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
     await NotificationModel.create(
       [
         {
-          recipient: subscription.user,
+          recipient: user._id,
           title: "Admin Topup",
           message: `Admin topup for ${numericAmount}`,
           type: "general",
-          entityId: subscription._id,
+          // entityId: subscription._id,
         },
       ],
       { session } // ✅ FIX: Session ka istemal karein

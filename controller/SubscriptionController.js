@@ -421,6 +421,16 @@ export const cancelSubscriptionController = async (req, res) => {
     subscription.cancellationReason = reason; // Reason ko save karein
     await subscription.save();
 
+    await NotificationModel.create([
+      {
+        recipient: subscription.user,
+        title: "Subscription Deactivated",
+        message: `your ${subscription.plan.productName} is deactivated successfully`,
+        type: "order deactivated",
+        entityId: subscription._id,
+      },
+    ]);
+
     res
       .status(200)
       .send({ success: true, message: "Subscription cancelled successfully." });

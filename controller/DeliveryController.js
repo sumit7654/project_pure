@@ -80,7 +80,18 @@ export const markAsDeliveredController = async (req, res) => {
         { session }
       );
     }
-
+    await NotificationModel.create(
+      [
+        {
+          recipient: subscription.user,
+          title: "Order Delivered",
+          message: `Your order for ${subscription.plan.productName} is Delivered by our delivery boy, if any problem contact with admin`,
+          type: "general",
+          entityId: subscription._id,
+        },
+      ]
+      // { session } // ✅ FIX: Session ka istemal karein
+    );
     await session.commitTransaction();
     session.endSession();
 

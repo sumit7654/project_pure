@@ -609,6 +609,18 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
     // Step 1: Wallet ka balance badhayein
     wallet.balance += numericAmount;
     await wallet.save({ session });
+    await NotificationModel.create(
+      [
+        {
+          recipient: subscription.user,
+          title: "Admin Topup",
+          message: `Admin topup for ${numericAmount}`,
+          type: "general",
+          entityId: subscription._id,
+        },
+      ],
+      { session } // ✅ FIX: Session ka istemal karein
+    );
 
     // Step 2: Ek transaction record banayein
     await TransactionModel.create(

@@ -282,8 +282,7 @@ export const updatePausedDatesController = async (req, res) => {
           type: "order deactivated",
           entityId: subscription._id,
         },
-      ],
-      { session } // ✅ FIX: Session ka istemal karein
+      ] // ✅ FIX: Session ka istemal karein
     );
     res.status(200).send({
       success: true,

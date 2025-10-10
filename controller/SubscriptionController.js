@@ -279,7 +279,7 @@ export const updatePausedDatesController = async (req, res) => {
           recipient: subscription.user,
           title: "Subscription paused",
           message: `Your subscription for ${subscription.plan.productName} is paused/resume`,
-          type: "order paused",
+          type: "subscription_paused",
           entityId: subscription._id,
         },
       ] // ✅ FIX: Session ka istemal karein

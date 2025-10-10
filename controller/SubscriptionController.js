@@ -426,10 +426,7 @@ export const cancelSubscriptionController = async (req, res) => {
     subscription.is_active = false;
     subscription.cancellationReason = reason; // Reason ko save karein
     await subscription.save();
-    if (product) {
-      product.quantity += subscription.plan.quantity;
-      await product.save({ session });
-    }
+
     await NotificationModel.create(
       [
         {

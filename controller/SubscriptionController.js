@@ -7,6 +7,7 @@ import TransactionModel from "../model/TransactionModel.js";
 import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 import mongoose from "mongoose";
 import ProductModel from "../model/ProductModel.js";
+import NotificationModel from "../model/NotificationModel.js";
 
 // =================================================================================
 // =================== REFERRAL REWARD LOGIC (HELPER FUNCTION) =====================

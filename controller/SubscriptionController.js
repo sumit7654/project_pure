@@ -225,7 +225,7 @@ export const createSubscriptionController = async (req, res) => {
     console.error("Error in createSubscriptionController:", error);
     res.status(500).send({
       success: false,
-      message: "Error creating subscription",
+      message: "Error creating subscription or product is out of stock",
       error: error.message,
     });
   } finally {

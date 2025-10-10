@@ -6,6 +6,7 @@ import Usermodel from "../model/Usermodel.js"; // <-- ✅ Ise jodein
 import TransactionModel from "../model/TransactionModel.js";
 import WalletModel from "./../model/Walletmodel.js"; // <-- ✅ YAHAN IMPORT KAREIN
 import mongoose from "mongoose";
+import ProductModel from "../model/ProductModel.js";
 
 // =================================================================================
 // =================== REFERRAL REWARD LOGIC (HELPER FUNCTION) =====================
@@ -116,7 +117,12 @@ export const createSubscriptionController = async (req, res) => {
       session
     );
     if (!product || product.quantity < plan.quantity) {
-      throw new Error("Sorry, this product is currently out of stock.");
+      // throw new Error("Sorry, this product is currently out of stock.");
+      return res.status(500).send({
+        success: false,
+        message: "Error verifying wallet balance.",
+        error: error.message,
+      });
     }
 
     const user = await Usermodel.findById(userId);

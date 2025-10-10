@@ -402,8 +402,8 @@ export const getAllSubscriptionsController = async (req, res) => {
 // };
 
 export const cancelSubscriptionController = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
   try {
     const { subscriptionId } = req.params;
     const { reason } = req.body; // Hum body se reason lenge
@@ -414,9 +414,7 @@ export const cancelSubscriptionController = async (req, res) => {
         .send({ success: false, message: "Cancellation reason is required." });
     }
 
-    const subscription = await SubscriptionModel.findById(
-      subscriptionId
-    ).session(session);
+    const subscription = await SubscriptionModel.findById(subscriptionId);
     if (!subscription) {
       return res
         .status(404)
@@ -426,34 +424,31 @@ export const cancelSubscriptionController = async (req, res) => {
     subscription.is_active = false;
     subscription.cancellationReason = reason; // Reason ko save karein
 
-    await NotificationModel.create(
-      [
-        {
-          recipient: subscription.user,
-          title: "Subscription Deactivated",
-          message: `your ${subscription.plan.productName} is deactivated successfully`,
-          type: "order deactivated",
-          entityId: subscription._id,
-        },
-      ],
-      { session }
-    );
+    await NotificationModel.create([
+      {
+        recipient: subscription.user,
+        title: "Subscription Deactivated",
+        message: `your ${subscription.plan.productName} is deactivated successfully`,
+        type: "order deactivated",
+        entityId: subscription._id,
+      },
+    ]);
     // Subscription ko save karein
-    await subscription.save({ session }); // ✅ FIX: Session ka istemal karein
+    await subscription.save(); // ✅ FIX: Session ka istemal karein
 
-    await session.commitTransaction();
+    // await session.commitTransaction();
     res
       .status(200)
       .send({ success: true, message: "Subscription cancelled successfully." });
   } catch (error) {
-    await session.abortTransaction();
+    // await session.abortTransaction();
     console.error("Error cancelling subscription:", error);
     res
       .status(500)
       .send({ success: false, message: "Error cancelling subscription." });
   } finally {
     // ✅ Step 5: Session ko hamesha 'END' (CLOSE) karein
-    session.endSession();
+    // session.endSession();
   }
 };
 

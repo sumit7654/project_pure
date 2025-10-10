@@ -402,6 +402,8 @@ export const getAllSubscriptionsController = async (req, res) => {
 // };
 
 export const cancelSubscriptionController = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { subscriptionId } = req.params;
     const { reason } = req.body; // Hum body se reason lenge
@@ -412,7 +414,9 @@ export const cancelSubscriptionController = async (req, res) => {
         .send({ success: false, message: "Cancellation reason is required." });
     }
 
-    const subscription = await SubscriptionModel.findById(subscriptionId);
+    const subscription = await SubscriptionModel.findById(
+      subscriptionId
+    ).session(session);
     if (!subscription) {
       return res
         .status(404)
@@ -422,16 +426,22 @@ export const cancelSubscriptionController = async (req, res) => {
     subscription.is_active = false;
     subscription.cancellationReason = reason; // Reason ko save karein
     await subscription.save();
-
-    await NotificationModel.create([
-      {
-        recipient: subscription.user,
-        title: "Subscription Deactivated",
-        message: `your ${subscription.plan.productName} is deactivated successfully`,
-        type: "order deactivated",
-        entityId: subscription._id,
-      },
-    ]);
+    if (product) {
+      product.quantity += subscription.plan.quantity;
+      await product.save({ session });
+    }
+    await NotificationModel.create(
+      [
+        {
+          recipient: subscription.user,
+          title: "Subscription Deactivated",
+          message: `your ${subscription.plan.productName} is deactivated successfully`,
+          type: "order deactivated",
+          entityId: subscription._id,
+        },
+      ],
+      { session }
+    );
 
     res
       .status(200)

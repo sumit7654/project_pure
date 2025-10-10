@@ -11,9 +11,32 @@ export const performDeduction = async (subscription, session) => {
   // today.setHours(0, 0, 0, 0);
 
   try {
+    const productIdFromSubscription = subscription.plan.productId;
+    console.log("-----------------------------------------");
+    console.log(`Processing subscription for phone: ${subscription.phone_no}`);
+    console.log(
+      `Searching for product with custom ID: ${productIdFromSubscription}`
+    );
+
     const product = await ProductModel.findOne({
-      id: subscription.plan.productId,
+      id: productIdFromSubscription,
     }).session(session);
+
+    if (!product) {
+      console.error(
+        `🔴 CRITICAL: Product NOT FOUND in database for ID: ${productIdFromSubscription}`
+      );
+      throw new Error("Product not found in database.");
+    }
+
+    console.log(`Product Found: ${product.name}`);
+    console.log(`==> Available Quantity in DB: ${product.quantity}`);
+    console.log(`==> Required Quantity for Sub: ${subscription.plan.quantity}`);
+    console.log("-----------------------------------------");
+    // ▲▲▲ YAHAN TAK ▲▲▲
+    // const product = await ProductModel.findOne({
+    //   id: subscription.plan.productId,
+    // }).session(session);
 
     const wallet = await WalletModel.findOne({
       phone_no: subscription.phone_no,

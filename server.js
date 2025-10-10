@@ -142,7 +142,7 @@ app.get("/", (req, res) => {
 
 // Yeh akela, smart job har din subah 1:05 AM IST par chalega
 cron.schedule(
-  "29 8 * * *",
+  "34 8 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {

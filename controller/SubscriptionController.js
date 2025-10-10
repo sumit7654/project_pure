@@ -108,8 +108,8 @@ const processReferralReward = async (newUserId, session) => {
 export const createSubscriptionController = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  const { phone_no, plan, startDate, userId } = req.body;
   try {
+    const { phone_no, plan, startDate, userId } = req.body;
     if (!phone_no || !plan || !startDate || !userId) {
       throw new Error("Missing required fields for subscription.");
     }
@@ -117,12 +117,12 @@ export const createSubscriptionController = async (req, res) => {
       session
     );
     if (!product || product.quantity < plan.quantity) {
-      // throw new Error("Sorry, this product is currently out of stock.");
-      return res.status(500).send({
-        success: false,
-        message: "Error verifying wallet balance.",
-        error: error.message,
-      });
+      throw new Error("Sorry, this product is currently out of stock.");
+      // return res.status(500).send({
+      //   success: false,
+      //   message: "something problem comes related to product quantity",
+      //   error: error.message,
+      // });
     }
 
     const user = await Usermodel.findById(userId);

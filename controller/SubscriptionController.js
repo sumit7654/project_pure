@@ -438,15 +438,22 @@ export const cancelSubscriptionController = async (req, res) => {
       ],
       { session }
     );
-    await subscription.save();
+    // Subscription ko save karein
+    await subscription.save({ session }); // ✅ FIX: Session ka istemal karein
+
+    await session.commitTransaction();
     res
       .status(200)
       .send({ success: true, message: "Subscription cancelled successfully." });
   } catch (error) {
+    await session.abortTransaction();
     console.error("Error cancelling subscription:", error);
     res
       .status(500)
       .send({ success: false, message: "Error cancelling subscription." });
+  } finally {
+    // ✅ Step 5: Session ko hamesha 'END' (CLOSE) karein
+    session.endSession();
   }
 };
 

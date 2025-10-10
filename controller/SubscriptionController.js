@@ -277,9 +277,9 @@ export const updatePausedDatesController = async (req, res) => {
       [
         {
           recipient: subscription.user,
-          title: "Subscription deactivated",
-          message: `Your subscription for ${subscription.plan.productName} is deactivated successfully if any problem contact to the admin`,
-          type: "order deactivated",
+          title: "Subscription paused",
+          message: `Your subscription for ${subscription.plan.productName} is paused/resume`,
+          type: "subscription_paused",
           entityId: subscription._id,
         },
       ]

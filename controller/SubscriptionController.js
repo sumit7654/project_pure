@@ -116,6 +116,7 @@ export const createSubscriptionController = async (req, res) => {
     const product = await ProductModel.findOne({ id: plan.productId }).session(
       session
     );
+    console.log("products is : ", product);
     if (!product || product.quantity < plan.quantity) {
       throw new Error("Sorry, this product is currently out of stock.");
       // return res.status(500).send({
@@ -151,18 +152,9 @@ export const createSubscriptionController = async (req, res) => {
         message: `Insufficient balance. You need ₹${plan.price_per_day} but you only have ₹${wallet.balance}.`,
       });
     }
-  } catch (error) {
-    console.error("Error during pre-check:", error);
-    return res.status(500).send({
-      success: false,
-      message: "Error verifying wallet balance.",
-      error: error.message,
-    });
-  }
 
-  // Step 3: Ab jab sab theek hai, tab hi transaction shuru karo
+    // Step 3: Ab jab sab theek hai, tab hi transaction shuru karo
 
-  try {
     const start = new Date(startDate);
     // const end = new Date(start);
     // end.setDate(start.getDate() + plan.duration_days - 1);
@@ -183,6 +175,8 @@ export const createSubscriptionController = async (req, res) => {
       validity_end_date: validityEndDate,
       is_active: true, // Hamesha active shuru hoga
     });
+
+    console.log("New subscription is: ", newSubscription);
     await newSubscription.save({ session });
 
     // const startDateString = start.toISOString().split("T")[0];

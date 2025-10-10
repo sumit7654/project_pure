@@ -36,6 +36,7 @@ const NotificationModel = new mongoose.Schema(
         "offer",
         "general",
         "order confirmed",
+        "order deactivated",
       ],
       default: "general",
     },

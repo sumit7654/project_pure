@@ -17,6 +17,7 @@ import pincodeRoutes from "./routes/pincodeRoutes.js"; // 💡 Naya route import
 import routeRoutes from "./routes/routeRoutes.js"; // 💡 Naya route import karein
 import productRoutes from "./routes/ProductRoutes.js"; // Import the new route
 import categoryRoutes from "./routes/CategoryRoutes.js"; // ✅ 1. Import the new router
+import notificationRoutes from "./routes/notificationRoutes.js"; // ⬅️ 1. YAHAN IMPORT KAREIN
 // Model Imports
 import SubscriptionModel from "./model/SubscriptionModel.js";
 import WalletModel from "./model/Walletmodel.js";
@@ -51,6 +52,7 @@ app.use("/api/pincodes", pincodeRoutes);
 app.use("/api/deliveries", deliveryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/notifications", notificationRoutes); // ⬅️ 2. YAHAN ISTEMAL KAREIN
 app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;

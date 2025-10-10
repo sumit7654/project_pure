@@ -179,6 +179,19 @@ export const createSubscriptionController = async (req, res) => {
     console.log("New subscription is: ", newSubscription);
     await newSubscription.save({ session });
 
+    await NotificationModel.create(
+      [
+        {
+          recipient: newSubscription.user,
+          title: "Order Confirmed",
+          message: `Your delivery for ${newSubscription.plan.productName} is confirmed but payment is not deducted yet. your payment deducted at midnight`,
+          type: "payment_successful",
+          entityId: newSubscription._id,
+        },
+      ],
+      { session } // ✅ FIX: Session ka istemal karein
+    );
+
     // const startDateString = start.toISOString().split("T")[0];
 
     // await DeliveryModel.create(
@@ -259,7 +272,18 @@ export const updatePausedDatesController = async (req, res) => {
       },
       { new: true }
     );
-
+    await NotificationModel.create(
+      [
+        {
+          recipient: subscription.user,
+          title: "Subscription deactivated",
+          message: `Your subscription for ${subscription.plan.productName} is deactivated successfully if any problem contact to the admin`,
+          type: "order deactivated",
+          entityId: subscription._id,
+        },
+      ],
+      { session } // ✅ FIX: Session ka istemal karein
+    );
     res.status(200).send({
       success: true,
       message: "Subscription updated successfully!",

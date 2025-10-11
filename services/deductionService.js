@@ -62,8 +62,11 @@ export const performDeduction = async (subscription, session) => {
       );
       throw new Error("Product out of stock");
     }
+
+    console.log("notification stock out ke baad nhi aa rha hai... ");
     await subscription.save({ session });
 
+    console.log("sabse last out of stock ka ");
     if (!wallet || wallet.balance < subscription.plan.price_per_day) {
       console.log(
         `Deactivating subscription for ${subscription.phone_no} due to insufficient balance.`

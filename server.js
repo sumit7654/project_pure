@@ -5,25 +5,25 @@ import connectDB from "./config/connectDB.js";
 import cors from "cors";
 import cron from "node-cron";
 import Razorpay from "razorpay";
-import { getTodayInKolkataString } from "./utils/dateHelper.js"; // ✅ Import the new helper
 // Route Imports
 import Userroutes from "./routes/Userroutes.js";
 import Walletroute from "./routes/Walletroute.js";
 import SubscriptionRoute from "./routes/SubscriptionRoute.js";
-import staffRoutes from "./routes/StaffRoute.js"; // File ka naam 'staffRoute.js' maan rahe hain
-import DeliveryModel from "./model/DeliveryModel.js"; // Naya model import karein
-import deliveryRoutes from "./routes/deliveryRoutes.js"; // Naya route import karein
-import pincodeRoutes from "./routes/pincodeRoutes.js"; // 💡 Naya route import karein
-import routeRoutes from "./routes/routeRoutes.js"; // 💡 Naya route import karein
-import productRoutes from "./routes/ProductRoutes.js"; // Import the new route
-import categoryRoutes from "./routes/CategoryRoutes.js"; // ✅ 1. Import the new router
-import notificationRoutes from "./routes/notificationRoutes.js"; // ⬅️ 1. YAHAN IMPORT KAREIN
+import staffRoutes from "./routes/StaffRoute.js";
+import deliveryRoutes from "./routes/deliveryRoutes.js";
+import pincodeRoutes from "./routes/pincodeRoutes.js";
+import routeRoutes from "./routes/routeRoutes.js";
+import productRoutes from "./routes/ProductRoutes.js";
+import categoryRoutes from "./routes/CategoryRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 // Model Imports
+import DeliveryModel from "./model/DeliveryModel.js";
 import SubscriptionModel from "./model/SubscriptionModel.js";
 import WalletModel from "./model/Walletmodel.js";
 
-// 💡 FIX: Deduction service ko import karein
+//Deduction service ko import karein
 import { performDeduction } from "./services/deductionService.js";
+import { getTodayInKolkataString } from "./utils/dateHelper.js";
 import mongoose from "mongoose";
 
 // Database Connection
@@ -52,7 +52,7 @@ app.use("/api/pincodes", pincodeRoutes);
 app.use("/api/deliveries", deliveryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
-app.use("/api/notifications", notificationRoutes); // ⬅️ 2. YAHAN ISTEMAL KAREIN
+app.use("/api/notifications", notificationRoutes);
 app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
@@ -75,7 +75,7 @@ app.post("/create-order", async (req, res) => {
   }
 });
 
-// ✅ ADD THIS HEALTH CHECK ROUTE
+//  ADD THIS HEALTH CHECK ROUTE for uptimerobot
 app.get("/", (req, res) => {
   res.send("Server is healthy and running!");
 });
@@ -138,19 +138,16 @@ app.get("/", (req, res) => {
 //   { timezone: "Asia/Kolkata" }
 // );
 
-// ==============================================================================
-// ========================== THE ONLY CRON JOB YOU NEED ========================
-// ==============================================================================
-
-// Yeh akela, smart job har din subah 1:05 AM IST par chalega
 cron.schedule(
-  "58 0 * * *",
+  "18 12 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayString = getTodayInKolkataString();
+      console.log("Today is :", today);
+      console.log("Today String is :", todayString);
 
       // Step 1: Sabse pehle, un sabhi subscriptions ko deactivate karein jo pehle hi expire ho chuke hain.
       const deactivationResult = await SubscriptionModel.updateMany(
@@ -179,6 +176,8 @@ cron.schedule(
       console.log(
         `Found ${subscriptionsToProcess.length} subscriptions to process for ${todayString}.`
       );
+
+      console.log(" ++ ++ Subscription to process : ", subscriptionsToProcess);
 
       // Step 3: Har ek subscription ko process karein.
       for (const sub of subscriptionsToProcess) {

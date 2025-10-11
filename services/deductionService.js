@@ -42,6 +42,8 @@ export const performDeduction = async (subscription, session) => {
       phone_no: subscription.phone_no,
     }).session(session);
 
+    console.log("Wallet in deduction service :", wallet);
+
     if (!product || product.quantity < subscription.plan.quantity) {
       subscription.is_active = false;
       await subscription.save({ session });
@@ -65,6 +67,7 @@ export const performDeduction = async (subscription, session) => {
         `Deactivating subscription for ${subscription.phone_no} due to insufficient balance.`
       );
       subscription.is_active = false;
+      console.log("Subscription is active or not : ", subscription.is_active);
       await subscription.save({ session }); // ✅ FIX: Session ka istemal karein
       await NotificationModel.create(
         [
@@ -81,10 +84,18 @@ export const performDeduction = async (subscription, session) => {
       throw new Error("Insufficient balance");
     }
 
+    console.log("############# check this log  ################");
+    console.log(" --Before order Wallet : ", wallet.balance);
+    console.log("-- Before order quantity : ", product.quantity);
+    console.log("-- before plan price day : ", subscription.plan.price_per_day);
+    console.log("-- before plan Quantity : ", subscription.plan.quantity);
     // Wallet se paise kaatein
     wallet.balance -= subscription.plan.price_per_day;
     product.quantity -= subscription.plan.quantity;
     subscription.last_deduction_date = new Date();
+
+    console.log("-- After order Wallet : ", wallet.balance);
+    console.log("-- After order quantity : ", product.quantity);
 
     await TransactionModel.create(
       [
@@ -112,6 +123,8 @@ export const performDeduction = async (subscription, session) => {
       ],
       { session }
     );
+
+    console.log("User id throught the subcription : ", subscription.user._id);
 
     await NotificationModel.create(
       [

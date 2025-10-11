@@ -63,6 +63,13 @@ export const Registercontroller = async (req, res) => {
     await user.save({ session });
 
     await session.commitTransaction();
+    await NotificationModel.create([
+      {
+        recipient: user._id,
+        title: "Welcome Bonus of 50 rs",
+        message: `Welcome ${user.name} , You got welcome bonus of 50rs `,
+      },
+    ]);
 
     res.status(201).send({
       success: true,
@@ -131,7 +138,7 @@ export const Logincontroller = async (req, res) => {
 };
 
 export const UpdateLocationController = async (req, res) => {
-  console.log("✅ REQUEST REACHED UpdateLocationController!");
+  // console.log("✅ REQUEST REACHED UpdateLocationController!");
   try {
     const { userId } = req.params;
     const {
@@ -281,7 +288,7 @@ export const getTodaysDeliveriesController = async (req, res) => {
   try {
     const { deliveryBoyId } = req.params;
     const deliveryBoy = await Usermodel.findById(deliveryBoyId);
-    console.log("delivry boy ", deliveryBoy);
+    console.log("delivery boy ", deliveryBoy);
 
     if (
       !deliveryBoy ||
@@ -611,18 +618,6 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
     // Step 1: Wallet ka balance badhayein
     wallet.balance += numericAmount;
     await wallet.save({ session });
-    await NotificationModel.create(
-      [
-        {
-          recipient: user._id,
-          title: "Admin Topup",
-          message: `Admin topup for ${numericAmount}`,
-          type: "general",
-          // entityId: subscription._id,
-        },
-      ],
-      { session } // ✅ FIX: Session ka istemal karein
-    );
 
     // Step 2: Ek transaction record banayein
     await TransactionModel.create(
@@ -636,6 +631,18 @@ export const addMoneyToWalletByAdminController = async (req, res) => {
         },
       ],
       { session }
+    );
+    await NotificationModel.create(
+      [
+        {
+          recipient: user._id,
+          title: "Admin Topup",
+          message: `Admin topup for ${numericAmount}`,
+          type: "general",
+          // entityId: subscription._id,
+        },
+      ],
+      { session } // ✅ FIX: Session ka istemal karein
     );
 
     // Agar sab kuch safal raha, to transaction ko poora karein

@@ -25,6 +25,7 @@ export const getTodaysDeliveriesForAdminController = async (req, res) => {
       })
       .sort({ createdAt: -1 }); // Naye orders ko sabse upar dikhayein
 
+    console.log(" ----- in Delivery controller Deliveries for admin all : ", deliveries);
     if (!deliveries) {
       return res.status(404).send({
         success: false,
@@ -40,10 +41,10 @@ export const getTodaysDeliveriesForAdminController = async (req, res) => {
     });
   } catch (error) {
     console.error(
-      "Admin ke liye aaj ki deliveries fetch karne mein error:",
+      "There are error in fetching today deliveries for admin",
       error
     );
-    res.status(500).send({ success: false, message: "Server mein error hai." });
+    res.status(500).send({ success: false, message: "Error in server !" });
   }
 };
 

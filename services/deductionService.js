@@ -140,7 +140,7 @@ export const performDeduction = async (subscription, session) => {
     );
 
     // Subscription mein aaj ki tareekh update karein
-    subscription.last_deduction_date = today;
+    subscription.last_deduction_date = todayString;
 
     await wallet.save({ session });
     await product.save({ session });

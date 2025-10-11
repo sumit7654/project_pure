@@ -140,7 +140,7 @@ app.get("/", (req, res) => {
 // );
 
 cron.schedule(
-  "16 13 * * *",
+  "23 14 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {

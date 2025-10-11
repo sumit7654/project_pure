@@ -25,6 +25,7 @@ import WalletModel from "./model/Walletmodel.js";
 import { performDeduction } from "./services/deductionService.js";
 import { getTodayInKolkataString } from "./utils/dateHelper.js";
 import mongoose from "mongoose";
+import NotificationModel from "./model/NotificationModel.js";
 
 // Database Connection
 connectDB();
@@ -139,7 +140,7 @@ app.get("/", (req, res) => {
 // );
 
 cron.schedule(
-  "34 13 * * *",
+  "40 13 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {

@@ -45,7 +45,6 @@ export const performDeduction = async (subscription, session) => {
 
     if (!product || product.quantity < subscription.plan.quantity) {
       subscription.is_active = false;
-      await subscription.save({ session });
       await NotificationModel.create(
         [
           {
@@ -60,6 +59,7 @@ export const performDeduction = async (subscription, session) => {
       );
       throw new Error("Product out of stock");
     }
+    await subscription.save({ session });
 
     if (!wallet || wallet.balance < subscription.plan.price_per_day) {
       console.log(
@@ -67,7 +67,6 @@ export const performDeduction = async (subscription, session) => {
       );
       subscription.is_active = false;
       console.log("Subscription is active or not : ", subscription.is_active);
-      await subscription.save({ session }); // ✅ FIX: Session ka istemal karein
       await NotificationModel.create(
         [
           {
@@ -82,6 +81,7 @@ export const performDeduction = async (subscription, session) => {
       );
       throw new Error("Insufficient balance");
     }
+    await subscription.save({ session }); // ✅ FIX: Session ka istemal karein
 
     console.log("############# check this log  ################");
     console.log(" --Before order Wallet : ", wallet.balance);

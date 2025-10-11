@@ -139,7 +139,7 @@ app.get("/", (req, res) => {
 // );
 
 cron.schedule(
-  "57 12 * * *",
+  "27 1 * * *",
   async () => {
     console.log("--- Starting Daily Subscription Processing Job ---");
     try {
@@ -188,6 +188,26 @@ cron.schedule(
           await session.commitTransaction();
         } catch (error) {
           await session.abortTransaction();
+          console.log(
+            `Creating failure notification for sub ${sub._id} due to : ${error.message}`
+          );
+          if (error.message === "Product out of stock") {
+            await NotificationModel.create({
+              recipient: subscription.user,
+              title: "Subscription Paused: Out of Stock",
+              message: `Your ${subscription.plan.productName} subscription is paused as the product is out of stock.`,
+              type: "subscription_paused",
+              entityId: subscription._id,
+            });
+          } else if (error.message === "Insufficient balance") {
+            await NotificationModel.create({
+              recipient: subscription.user,
+              title: "Subscription Paused: Low Balance",
+              message: `Your ${subscription.plan.productName} subscription has been paused due to low wallet balance. Please recharge.`,
+              type: "subscription_paused",
+              entityId: subscription._id,
+            });
+          }
         } finally {
           session.endSession();
         }

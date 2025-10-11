@@ -48,18 +48,18 @@ export const performDeduction = async (subscription, session) => {
       console.log(
         "Out of stock hai yaha aur notification show nhi ho rha hai "
       );
-      await NotificationModel.create(
-        [
-          {
-            recipient: subscription.user,
-            title: "Subscription Paused: Out of Stock",
-            message: `Your ${subscription.plan.productName} subscription is paused as the product is out of stock.`,
-            type: "subscription_paused",
-            entityId: subscription._id,
-          },
-        ],
-        { session }
-      );
+      // await NotificationModel.create(
+      //   [
+      //     {
+      //       recipient: subscription.user,
+      //       title: "Subscription Paused: Out of Stock",
+      //       message: `Your ${subscription.plan.productName} subscription is paused as the product is out of stock.`,
+      //       type: "subscription_paused",
+      //       entityId: subscription._id,
+      //     },
+      //   ],
+      //   { session }
+      // );
       throw new Error("Product out of stock");
     }
 
@@ -73,18 +73,18 @@ export const performDeduction = async (subscription, session) => {
       );
       subscription.is_active = false;
       console.log("Subscription is active or not : ", subscription.is_active);
-      await NotificationModel.create(
-        [
-          {
-            recipient: subscription.user,
-            title: "Subscription Paused: Low Balance",
-            message: `Your ${subscription.plan.productName} subscription has been paused due to low wallet balance. Please recharge.`,
-            type: "subscription_paused",
-            entityId: subscription._id,
-          },
-        ],
-        { session }
-      );
+      // await NotificationModel.create(
+      //   [
+      //     {
+      //       recipient: subscription.user,
+      //       title: "Subscription Paused: Low Balance",
+      //       message: `Your ${subscription.plan.productName} subscription has been paused due to low wallet balance. Please recharge.`,
+      //       type: "subscription_paused",
+      //       entityId: subscription._id,
+      //     },
+      //   ],
+      //   { session }
+      // );
       throw new Error("Insufficient balance");
     }
     await subscription.save({ session }); // ✅ FIX: Session ka istemal karein

@@ -7,10 +7,9 @@ import DeliveryModel from "../model/DeliveryModel.js";
 
 // Ye function ek subscription leta hai aur uske paise kaatta hai
 export const performDeduction = async (subscription, session) => {
-  // const today = new Date();
-  // today.setHours(0, 0, 0, 0);
-
   try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const productIdFromSubscription = subscription.plan.productId;
     console.log("-----------------------------------------");
     console.log(`Processing subscription for phone: ${subscription.phone_no}`);
@@ -140,7 +139,7 @@ export const performDeduction = async (subscription, session) => {
     );
 
     // Subscription mein aaj ki tareekh update karein
-    subscription.last_deduction_date = todayString;
+    subscription.last_deduction_date = today;
 
     await wallet.save({ session });
     await product.save({ session });

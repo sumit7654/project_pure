@@ -45,6 +45,9 @@ export const performDeduction = async (subscription, session) => {
 
     if (!product || product.quantity < subscription.plan.quantity) {
       subscription.is_active = false;
+      console.log(
+        "Out of stock hai yaha aur notification show nhi ho rha hai "
+      );
       await NotificationModel.create(
         [
           {
